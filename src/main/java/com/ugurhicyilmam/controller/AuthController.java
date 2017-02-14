@@ -1,6 +1,7 @@
 package com.ugurhicyilmam.controller;
 
 import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ public class AuthController {
 
     @RequestMapping(method = POST, value = "/register")
     public Response register(@RequestBody @Valid RegisterRequest request) {
+        User user = authService.register(request);
         return null;
     }
 }

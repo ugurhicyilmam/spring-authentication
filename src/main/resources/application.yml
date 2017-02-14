@@ -1,2 +1,5 @@
 application:
   validate-email-domain: true
+security:
+  basic:
+    enabled: false

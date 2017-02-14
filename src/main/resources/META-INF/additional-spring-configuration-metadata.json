@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "application.validate-email-domain",
+      "type": "java.lang.Boolean",
+      "description": "Set it to true to allow only certain email domains accepted during registration."
+    }
+  ]
+}

@@ -17,10 +17,10 @@ public class LanguageValidImpl implements ConstraintValidator<LanguageValid, Str
 
     @Override
     public boolean isValid(String language, ConstraintValidatorContext context) {
-        return language != null && isCastableToLanguage(language);
+        return language != null && isLanguage(language);
     }
 
-    private boolean isCastableToLanguage(String language) {
+    private boolean isLanguage(String language) {
         try {
             Language.valueOf(language);
         } catch (IllegalArgumentException ex) {

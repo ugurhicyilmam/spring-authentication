@@ -43,7 +43,7 @@ public class AuthServiceImplTest {
         this.sampleRegisterRequest.setEmail("ugurhicyilmam@gmail.com");
         this.sampleRegisterRequest.setPassword("password");
         this.sampleRegisterRequest.setPasswordConfirmation("password");
-        this.sampleRegisterRequest.setLanguage("TURKISH");
+        this.sampleRegisterRequest.setLanguage("TR");
     }
 
     @After

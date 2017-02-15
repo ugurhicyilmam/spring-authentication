@@ -5,6 +5,7 @@ import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.UserService;
+import com.ugurhicyilmam.util.enums.Language;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setPassword(request.getPassword());
+        user.setLanguage(Language.valueOf(request.getLanguage()));
         return user;
     }
 }

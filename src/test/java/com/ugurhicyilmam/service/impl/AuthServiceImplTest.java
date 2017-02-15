@@ -43,6 +43,7 @@ public class AuthServiceImplTest {
         this.sampleRegisterRequest.setEmail("ugurhicyilmam@gmail.com");
         this.sampleRegisterRequest.setPassword("password");
         this.sampleRegisterRequest.setPasswordConfirmation("password");
+        this.sampleRegisterRequest.setLanguage("TURKISH");
     }
 
     @After
@@ -86,6 +87,7 @@ public class AuthServiceImplTest {
         assertEquals(registerRequest.getFirstName(), user.getFirstName());
         assertEquals(registerRequest.getLastName(), user.getLastName());
         assertEquals(registerRequest.getPassword(), user.getPassword());
+        assertEquals(registerRequest.getLanguage(), user.getLanguage().toString());
     }
 
 

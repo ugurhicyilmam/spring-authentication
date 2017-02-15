@@ -1,5 +1,8 @@
+#Global application settings
 application:
   validate-email-domain: true
+  log-service-layer-as-info: true
+
 security:
   basic:
     enabled: false

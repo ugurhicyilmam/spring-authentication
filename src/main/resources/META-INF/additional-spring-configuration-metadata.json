@@ -4,6 +4,11 @@
       "name": "application.validate-email-domain",
       "type": "java.lang.Boolean",
       "description": "Set it to true to allow only certain email domains accepted during registration."
+    },
+    {
+      "name": "application.log-service-layer-as-info",
+      "type": "java.lang.Boolean",
+      "description": "Service layer logged as debug if false, info otherwise."
     }
   ]
 }

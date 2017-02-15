@@ -3,6 +3,7 @@ package com.ugurhicyilmam.controller.request;
 import com.ugurhicyilmam.controller.validation.EmailValid;
 import com.ugurhicyilmam.controller.validation.LanguageValid;
 import lombok.Data;
+import lombok.ToString;
 
 import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
@@ -10,6 +11,7 @@ import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Data
+@ToString(exclude = {"password", "passwordConfirmation"})
 public class RegisterRequest {
     @Size(min = 1, max = 30)
     private String firstName;
@@ -33,4 +35,5 @@ public class RegisterRequest {
     private boolean isPasswordConfirmation() {
         return Objects.equals(password, passwordConfirmation);
     }
+
 }

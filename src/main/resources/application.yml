@@ -2,6 +2,8 @@
 application:
   validate-email-domain: true
   log-service-layer-as-info: true
+  mail:
+    host: localhost
 
 security:
   basic:

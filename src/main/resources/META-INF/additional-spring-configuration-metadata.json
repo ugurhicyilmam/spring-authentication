@@ -9,6 +9,11 @@
       "name": "application.log-service-layer-as-info",
       "type": "java.lang.Boolean",
       "description": "Service layer logged as debug if false, info otherwise."
+    },
+    {
+      "name": "application.mail.host",
+      "type": "java.lang.String",
+      "description": "Mail service host"
     }
   ]
 }

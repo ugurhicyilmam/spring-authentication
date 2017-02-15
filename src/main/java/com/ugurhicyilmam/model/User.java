@@ -2,6 +2,7 @@ package com.ugurhicyilmam.model;
 
 import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,6 +10,7 @@ import javax.persistence.*;
 import java.util.Collection;
 
 @Data
+@ToString(exclude = {"password"})
 @Entity
 public class User implements UserDetails {
     @Id

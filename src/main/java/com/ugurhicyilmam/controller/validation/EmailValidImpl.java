@@ -14,13 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EmailValidImpl implements ConstraintValidator<EmailValid, String> {
 
     private static final Map<String, String> domains = new ConcurrentHashMap<>();
-    private final UserService userService;
-    private final boolean validateEmailDomain;
 
     static {
         domains.put("yildiz.edu.tr", "");
         domains.put("boun.edu.tr", "");
     }
+
+    private final UserService userService;
+    private final boolean validateEmailDomain;
 
     @Autowired
     public EmailValidImpl(UserService userService, @Value("${application.validate-email-domain}") boolean validateEmailDomain) {

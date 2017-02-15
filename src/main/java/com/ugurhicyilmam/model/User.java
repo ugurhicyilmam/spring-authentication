@@ -1,13 +1,13 @@
 package com.ugurhicyilmam.model;
 
+import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Collection;
+import java.util.Locale;
 
 @Data
 @Entity
@@ -23,6 +23,9 @@ public class User implements UserDetails {
     private String password;
 
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    private Language language;
 
     private long registeredAt;
 

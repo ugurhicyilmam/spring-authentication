@@ -1,6 +1,8 @@
 package com.ugurhicyilmam.controller.request;
 
 import com.ugurhicyilmam.controller.validation.EmailValid;
+import com.ugurhicyilmam.controller.validation.LanguageValid;
+import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
 
 import javax.validation.constraints.AssertTrue;
@@ -24,6 +26,9 @@ public class RegisterRequest {
 
     @EmailValid
     private String email;
+
+    @LanguageValid
+    private String language;
 
     @AssertTrue(message = "{com.ugurhicyilmam.constraint.PasswordConfirmation.message}")
     private boolean isPasswordConfirmation() {

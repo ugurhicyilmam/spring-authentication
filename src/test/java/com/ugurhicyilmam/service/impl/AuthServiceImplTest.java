@@ -90,5 +90,4 @@ public class AuthServiceImplTest {
         assertEquals(registerRequest.getLanguage(), user.getLanguage().toString());
     }
 
-
 }

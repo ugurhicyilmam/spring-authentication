@@ -61,4 +61,5 @@ public class EmailValidImpl implements ConstraintValidator<EmailValid, String> {
     private boolean isValidEmailAddress(String email) {
         return EmailValidator.getInstance().isValid(email);
     }
+
 }

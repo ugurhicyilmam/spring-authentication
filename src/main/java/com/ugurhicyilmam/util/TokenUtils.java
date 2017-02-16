@@ -26,5 +26,4 @@ public final class TokenUtils {
         return StringUtils.newStringUtf8(Base64.decodeBase64(token));
     }
 
-
 }

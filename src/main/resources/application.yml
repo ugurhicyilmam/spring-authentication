@@ -2,6 +2,7 @@
 application:
   validate-email-domain: true
   log-service-layer-as-info: true
+  activation-token-life-length: 48
   mail:
     host: localhost
 

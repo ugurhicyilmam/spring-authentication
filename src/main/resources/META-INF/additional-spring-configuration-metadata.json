@@ -14,6 +14,11 @@
       "name": "application.mail.host",
       "type": "java.lang.String",
       "description": "Mail service host"
+    },
+    {
+      "name": "application.activation-token-life-length",
+      "type": "java.lang.String",
+      "description": "Life length of activation tokens in hours."
     }
   ]
 }

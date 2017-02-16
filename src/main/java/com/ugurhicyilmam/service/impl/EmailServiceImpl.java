@@ -2,6 +2,7 @@ package com.ugurhicyilmam.service.impl;
 
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.EmailService;
+import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,20 +38,27 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendActivationEmail(User user) {
-        Locale userLocale = Locale.forLanguageTag(user.getLanguage().toString());
-
         Email email = new Email();
         email.setTo(user.getEmail());
-        email.setSubject(messageSource.getMessage("mail.registration.subject", null, userLocale));
-        email.setContent(processActivationTemplate(messageSource.getMessage("mail.registration.message", null, userLocale)));
+        email.setSubject(getActivationEmailSubject(user.getLanguage()));
+        email.setContent(processActivationTemplate(user.getActivationToken().getToken(), user.getLanguage()));
 
         sendHtmlEmail(email);
     }
 
-    private String processActivationTemplate(String message) {
+    private String getActivationEmailSubject(Language language) {
+        return messageSource.getMessage("mail.registration.subject", null, Locale.forLanguageTag(language.toString()));
+    }
+
+    private String processActivationTemplate(String token, Language language) {
+
         final Context context = new Context();
-        context.setVariable("message", message);
-        return emailTemplateEngine.process("email-activation", context);
+        context.setVariable("activationToken", token);
+        return emailTemplateEngine.process(getTemplateNameForLanguage("email-activation", language), context);
+    }
+
+    private String getTemplateNameForLanguage(String template, Language language) {
+        return template + "_" + language.toString().toLowerCase();
     }
 
     private void sendHtmlEmail(Email email) {

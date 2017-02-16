@@ -10,7 +10,7 @@ import javax.persistence.*;
 import java.util.Collection;
 
 @Data
-@ToString(exclude = {"password"})
+@ToString(exclude = {"password", "activationToken"})
 @Entity
 public class User implements UserDetails {
     @Id
@@ -29,7 +29,7 @@ public class User implements UserDetails {
     private Language language;
 
     @OneToOne(mappedBy = "user")
-    private ActivationToken activationToken;
+    private transient ActivationToken activationToken;
 
     // ### UserDetails ###
     private long registeredAt;

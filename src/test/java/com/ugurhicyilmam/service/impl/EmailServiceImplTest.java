@@ -1,5 +1,6 @@
 package com.ugurhicyilmam.service.impl;
 
+import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.EmailService;
 import com.ugurhicyilmam.util.enums.Language;
@@ -39,6 +40,10 @@ public class EmailServiceImplTest {
         User user = new User();
         user.setEmail("ugur@yildiz.edu.tr");
         user.setLanguage(Language.TR);
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setToken("Token");
+        user.setActivationToken(activationToken);
+        activationToken.setUser(user);
 
         emailService.sendActivationEmail(user);
 

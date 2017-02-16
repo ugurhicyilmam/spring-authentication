@@ -28,6 +28,10 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Language language;
 
+    @OneToOne(mappedBy = "user")
+    private ActivationToken activationToken;
+
+    // ### UserDetails ###
     private long registeredAt;
 
     private boolean accountNonExpired;

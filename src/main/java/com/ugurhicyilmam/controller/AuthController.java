@@ -7,6 +7,7 @@ import com.ugurhicyilmam.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -27,6 +28,12 @@ public class AuthController {
     @RequestMapping(method = POST, value = "/register")
     public Response register(@RequestBody @Valid RegisterRequest request) {
         User user = authService.register(request);
+        return null;
+    }
+
+    @RequestMapping(method = POST, value = "/activate")
+    public Response activate(@RequestParam String token) {
+        System.out.println(token);
         return null;
     }
 

@@ -19,6 +19,11 @@
       "name": "application.activation-token-life-length",
       "type": "java.lang.String",
       "description": "Life length of activation tokens in hours."
+    },
+    {
+      "name": "application.email.base-url",
+      "type": "java.lang.String",
+      "description": "Server url to be included to links in emails."
     }
   ]
 }

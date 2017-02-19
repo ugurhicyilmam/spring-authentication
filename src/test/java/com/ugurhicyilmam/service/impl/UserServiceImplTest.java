@@ -41,6 +41,18 @@ public class UserServiceImplTest {
     }
 
     @Test
+    public void findByEmail_shouldCallAndReturnRepoCorrectly() throws Exception {
+        User user = new User();
+        String email = "ugur@yildiz.edu.tr";
+        when(userRepository.findByEmail(eq(email))).thenReturn(user);
+
+        User response = userService.findByEmail(email);
+
+        verify(userRepository, times(1)).findByEmail(eq(email));
+        assertEquals(user, response);
+    }
+
+    @Test
     public void create_shouldCorrectlyInitializeCreateRelatedProperties() throws Exception {
         User user = new User();
         userService.create(user);

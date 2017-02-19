@@ -35,6 +35,7 @@ public class ActivationTokenServiceImpl implements ActivationTokenService {
         activationToken.setToken(TokenUtils.generateToken());
         activationToken.setUser(user);
         activationToken.setValidUntil(getValidUntil());
+        user.setActivationToken(activationToken);
         return activationToken;
     }
 

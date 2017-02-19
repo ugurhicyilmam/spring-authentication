@@ -49,7 +49,7 @@ public class EmailServiceImplTest {
 
         assertReceivedMessage(wiser).from("ugur@hicyilmam.com")
                 .to(user.getEmail())
-                .withSubject("Aktivasyon Kodu");
+                .withSubject("Aktivasyon Detayları");
     }
 
 }

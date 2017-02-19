@@ -3,12 +3,14 @@ package com.ugurhicyilmam.service.impl;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.model.User;
+import com.ugurhicyilmam.service.ActivationTokenService;
 import com.ugurhicyilmam.service.UserService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,13 +31,16 @@ public class AuthServiceImplTest {
     @MockBean
     private ApplicationEventPublisher eventPublisher;
 
+    @MockBean
+    private ActivationTokenService activationTokenService;
+
     private AuthServiceImpl authService;
 
     private RegisterRequest sampleRegisterRequest;
 
     @Before
     public void setUp() throws Exception {
-        authService = new AuthServiceImpl(userService, eventPublisher);
+        authService = new AuthServiceImpl(userService, activationTokenService, eventPublisher);
 
         this.sampleRegisterRequest = new RegisterRequest();
         this.sampleRegisterRequest.setFirstName("Ugur");
@@ -80,6 +85,12 @@ public class AuthServiceImplTest {
         ArgumentCaptor<OnAccountCreation> eventCaptor = ArgumentCaptor.forClass(OnAccountCreation.class);
         verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
         assertEquals(user, eventCaptor.getValue().getUser());
+    }
+
+    @Test
+    public void register_shouldInvokeIssueNewToken() throws Exception {
+        User user = authService.register(sampleRegisterRequest);
+        verify(activationTokenService, times(1)).issueNewToken(user);
     }
 
     private void ensureEqualityOfRequestAndUser(RegisterRequest registerRequest, User user) throws Exception {

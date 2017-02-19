@@ -44,7 +44,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendActivationEmail(User user) {
         Map<String, Object> emailData = new HashMap<>();
-        emailData.put("token", "TOKEN");
+        emailData.put("token", user.getActivationToken().getToken());
+        emailData.put("realName", user.getRealName());
         sendEmailTo(user, EmailType.ACTIVATION, emailData);
     }
 

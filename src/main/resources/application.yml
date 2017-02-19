@@ -4,6 +4,7 @@ application:
   log-service-layer-as-info: true
   activation-token-life-length: 48
   email.base-url: http://localhost:8080
+  email.from: auth@localhost.com
   mail:
     host: localhost
 

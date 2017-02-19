@@ -47,7 +47,7 @@ public class EmailServiceImplTest {
 
         emailService.sendActivationEmail(user);
 
-        assertReceivedMessage(wiser).from("ugur@hicyilmam.com")
+        assertReceivedMessage(wiser).from("auth@localhost.com")
                 .to(user.getEmail())
                 .withSubject("Aktivasyon Detayları");
     }

@@ -24,6 +24,11 @@
       "name": "application.email.base-url",
       "type": "java.lang.String",
       "description": "Server url to be included to links in emails."
+    },
+    {
+      "name": "application.email.from",
+      "type": "java.lang.String",
+      "description": "From field of sent emails."
     }
   ]
 }

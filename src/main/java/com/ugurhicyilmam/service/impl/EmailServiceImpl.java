@@ -31,14 +31,16 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine emailTemplateEngine;
     private final MessageSource messageSource;
     private final String baseUrl;
+    private final String emailFrom;
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired
-    public EmailServiceImpl(JavaMailSender mailSender, TemplateEngine emailTemplateEngine, MessageSource messageSource, @Value("${application.email.base-url}") String baseUrl) {
+    public EmailServiceImpl(JavaMailSender mailSender, TemplateEngine emailTemplateEngine, MessageSource messageSource, @Value("${application.email.base-url}") String baseUrl, @Value("${application.email.from}") String emailFrom) {
         this.mailSender = mailSender;
         this.emailTemplateEngine = emailTemplateEngine;
         this.messageSource = messageSource;
         this.baseUrl = baseUrl;
+        this.emailFrom = emailFrom;
     }
 
     @Override
@@ -87,7 +89,7 @@ public class EmailServiceImpl implements EmailService {
     private void sendHtmlEmail(Email email) {
         MimeMessagePreparator mimeMessagePreparator = mimeMessage -> {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
-            messageHelper.setFrom("ugur@hicyilmam.com");
+            messageHelper.setFrom(emailFrom);
             messageHelper.setTo(email.getTo());
             messageHelper.setSubject(email.getSubject());
             messageHelper.setText(email.getContent(), true);

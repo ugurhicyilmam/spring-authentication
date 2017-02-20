@@ -34,4 +34,10 @@ public class UserServiceImpl implements UserService {
         user.setAccountNonLocked(true);
         userRepository.save(user);
     }
+
+    @Override
+    public void activateUser(User user) {
+        user.setEnabled(true);
+        userRepository.save(user);
+    }
 }

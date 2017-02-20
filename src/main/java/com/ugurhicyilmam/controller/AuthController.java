@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
@@ -31,8 +32,9 @@ public class AuthController {
         return null;
     }
 
-    @RequestMapping(method = POST, value = "/activate")
+    @RequestMapping(method = GET, value = "/activate")
     public Response activate(@RequestParam String token) {
+        authService.activate(token);
         System.out.println(token);
         return null;
     }

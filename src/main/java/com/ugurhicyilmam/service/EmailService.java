@@ -9,4 +9,6 @@ public interface EmailService {
     void sendActivationEmail(User user);
 
     void sendEmailTo(User user, EmailServiceImpl.EmailType emailType, Map<String, Object> emailArguments);
+
+    void sendWelcomeEmail(User user);
 }

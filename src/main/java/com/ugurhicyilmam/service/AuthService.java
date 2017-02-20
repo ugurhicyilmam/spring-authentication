@@ -5,4 +5,6 @@ import com.ugurhicyilmam.model.User;
 
 public interface AuthService {
     User register(RegisterRequest request);
+
+    void activate(String token);
 }

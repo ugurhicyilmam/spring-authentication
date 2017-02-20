@@ -2,6 +2,7 @@ package com.ugurhicyilmam.controller.advice;
 
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.response.Status;
+import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -26,6 +27,13 @@ public class AuthControllerAdvice {
         for (FieldError fieldError : fieldErrors) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return new Response(Status.FAIL, errors);
+        return Response.builder(Status.FAIL).data(errors).build();
+    }
+
+    @ResponseStatus(value = HttpStatus.OK)
+    @ExceptionHandler(InvalidActivationTokenException.class)
+    @ResponseBody
+    public Response processActivationTokenError(InvalidActivationTokenException ex) {
+        return Response.builder(Status.FAIL).message("Activation token is not valid").build();
     }
 }

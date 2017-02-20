@@ -51,6 +51,16 @@ public class ActivationTokenServiceImpl implements ActivationTokenService {
             activationTokenRepository.delete(activationToken);
     }
 
+    @Override
+    public ActivationToken findByToken(String token) {
+        return activationTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public boolean isValid(ActivationToken activationToken) {
+        return false;
+    }
+
 
     private long getValidUntil() {
         long currentTime = System.currentTimeMillis();
@@ -60,5 +70,4 @@ public class ActivationTokenServiceImpl implements ActivationTokenService {
     private long hoursToMillis(long hours) {
         return TimeUnit.HOURS.toMillis(hours);
     }
-
 }

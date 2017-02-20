@@ -1,5 +1,6 @@
 package com.ugurhicyilmam.event.listener;
 
+import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.EmailService;
@@ -21,8 +22,12 @@ public class AuthEventListener {
     @Async
     @EventListener
     public void handleOnAccountCreation(OnAccountCreation event) {
-        User user = event.getUser();
+        emailService.sendActivationEmail(event.getUser());
+    }
 
-        emailService.sendActivationEmail(user);
+    @Async
+    @EventListener
+    public void handleOnAccountActivation(OnAccountActivation event) {
+        emailService.sendWelcomeEmail(event.getUser());
     }
 }

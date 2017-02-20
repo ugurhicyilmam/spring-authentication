@@ -4,6 +4,7 @@ import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.EmailService;
 import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
+import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,13 @@ public class EmailServiceImpl implements EmailService {
         sendHtmlEmail(email);
     }
 
+    @Override
+    public void sendWelcomeEmail(User user) {
+        Map<String, Object> emailData = new HashedMap();
+        emailData.put("realName", user.getRealName());
+        sendEmailTo(user, EmailType.WELCOME, emailData);
+    }
+
     /**
      * Gets localized subject according to email type
      */
@@ -110,7 +118,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     public enum EmailType {
-        ACTIVATION("email-activation");
+        ACTIVATION("email-activation"), WELCOME("email-welcome");
 
         private final String template;
         private final String messageBase;

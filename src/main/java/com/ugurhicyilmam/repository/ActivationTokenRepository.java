@@ -6,4 +6,6 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface ActivationTokenRepository extends CrudRepository<ActivationToken, Long> {
     ActivationToken findByUser(User user);
+
+    ActivationToken findByToken(String token);
 }

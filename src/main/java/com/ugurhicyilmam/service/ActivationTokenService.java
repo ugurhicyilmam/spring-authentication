@@ -10,7 +10,7 @@ public interface ActivationTokenService {
 
     void removeIfExistsForUser(User user);
 
-    ActivationToken findByToken(String token);
+    ActivationToken findValidToken(String token);
 
     boolean isValid(ActivationToken activationToken);
 }

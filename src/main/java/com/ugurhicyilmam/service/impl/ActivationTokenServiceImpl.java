@@ -4,6 +4,7 @@ import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
 import com.ugurhicyilmam.service.ActivationTokenService;
+import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import com.ugurhicyilmam.util.TokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,8 +53,11 @@ public class ActivationTokenServiceImpl implements ActivationTokenService {
     }
 
     @Override
-    public ActivationToken findByToken(String token) {
-        return activationTokenRepository.findByToken(token);
+    public ActivationToken findValidToken(String token) {
+        ActivationToken activationToken = activationTokenRepository.findByToken(token);
+        if(!isValid(activationToken))
+            throw new InvalidActivationTokenException();
+        return activationToken;
     }
 
     @Override

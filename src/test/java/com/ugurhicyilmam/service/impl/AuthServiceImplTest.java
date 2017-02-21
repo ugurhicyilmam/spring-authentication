@@ -1,7 +1,9 @@
 package com.ugurhicyilmam.service.impl;
 
 import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
+import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.ActivationTokenService;
 import com.ugurhicyilmam.service.UserService;
@@ -10,15 +12,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(SpringRunner.class)
@@ -99,6 +104,43 @@ public class AuthServiceImplTest {
         assertEquals(registerRequest.getLastName(), user.getLastName());
         assertEquals(registerRequest.getPassword(), user.getPassword());
         assertEquals(registerRequest.getLanguage(), user.getLanguage().toString());
+    }
+
+    @Test
+    public void activate_shouldHaveCorrectAlgorithm() throws Exception {
+        // activate method should find valid token,
+        // then activate user that token is associated,
+        // then remove token if exists,
+        // then publish event
+
+        String token = "Token";
+        ActivationToken activationToken = new ActivationToken();
+        User user = new User();
+        activationToken.setUser(user);
+        when(activationTokenService.findValidToken(eq(token))).thenReturn(activationToken);
+
+        InOrder inOrder = Mockito.inOrder(activationTokenService, userService, eventPublisher);
+        authService.activate(token);
+
+        inOrder.verify(activationTokenService, times(1)).findValidToken(eq(token));
+        inOrder.verify(userService, times(1)).activateUser(eq(user));
+        inOrder.verify(activationTokenService, times(1)).removeIfExistsForUser(eq(user));
+        inOrder.verify(eventPublisher, times(1)).publishEvent(any(OnAccountActivation.class));
+    }
+
+    @Test
+    public void activate_shouldFireCorrectEvent() throws Exception {
+        String token = "Token";
+        ActivationToken activationToken = new ActivationToken();
+        User user = new User();
+        activationToken.setUser(user);
+        when(activationTokenService.findValidToken(eq(token))).thenReturn(activationToken);
+
+        authService.activate(token);
+
+        ArgumentCaptor<OnAccountActivation> eventCaptor = ArgumentCaptor.forClass(OnAccountActivation.class);
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+        assertEquals(user, eventCaptor.getValue().getUser());
     }
 
 }

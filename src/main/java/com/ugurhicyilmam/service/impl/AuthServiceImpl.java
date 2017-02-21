@@ -40,17 +40,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void activate(String token) {
-        ActivationToken activationToken = activationTokenService.findByToken(token);
-        validate(activationToken);
+        ActivationToken activationToken = activationTokenService.findValidToken(token);
         User user = activationToken.getUser();
         userService.activateUser(user);
         activationTokenService.removeIfExistsForUser(user);
         eventPublisher.publishEvent(new OnAccountActivation(user));
-    }
-
-    private void validate(ActivationToken activationToken) {
-        if(!activationTokenService.isValid(activationToken))
-            throw new InvalidActivationTokenException();
     }
 
     private User initializeUserByRegisterRequest(RegisterRequest request) {

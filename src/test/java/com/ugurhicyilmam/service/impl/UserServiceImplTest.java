@@ -14,13 +14,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class UserServiceImplTest {
+
 
     @MockBean
     private UserRepository userRepository;
@@ -75,4 +74,17 @@ public class UserServiceImplTest {
         verify(userRepository, times(1)).save(eq(user));
     }
 
+    @Test
+    public void activateUser_shouldInvokeSaveWithEnabledUser() throws Exception {
+        User user = new User();
+        user.setEnabled(false);
+        userService.activateUser(user);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
+        verify(userRepository, times(1)).save(userCaptor.capture());
+        assertEquals(user, userCaptor.getValue());
+        assertTrue(user.isEnabled());
+        assertTrue(userCaptor.getValue().isEnabled());
+    }
 }

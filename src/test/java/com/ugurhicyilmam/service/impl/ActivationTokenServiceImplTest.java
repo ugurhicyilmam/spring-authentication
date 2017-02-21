@@ -4,6 +4,7 @@ import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
 import com.ugurhicyilmam.service.ActivationTokenService;
+import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import com.ugurhicyilmam.util.TokenUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -142,6 +143,46 @@ public class ActivationTokenServiceImplTest {
         activationTokenService.removeIfExistsForUser(user);
 
         verify(activationTokenRepository, times(0)).delete(any(ActivationToken.class));
+    }
+
+    @Test
+    public void findValidToken_shouldReturnIfTokenValid() throws Exception {
+        String token = "Valid_Token";
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setValidUntil(System.currentTimeMillis() + 1000); // valid
+        when(activationTokenRepository.findByToken(token)).thenReturn(activationToken);
+
+        assertEquals(activationToken, activationTokenService.findValidToken(token));
+    }
+
+    @Test
+    public void isValid_shouldThrowExceptionIfTokenExpired() throws Exception {
+        String token = "Token";
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setValidUntil(System.currentTimeMillis() - 1000); // invalid
+        when(activationTokenRepository.findByToken(token)).thenReturn(activationToken);
+
+        try {
+            activationTokenService.findValidToken(token);
+        } catch (InvalidActivationTokenException ex) {
+            return;
+        }
+
+        fail();
+    }
+
+    @Test
+    public void isValid_shouldThrowExceptionIfTokenNotFound() throws Exception {
+        String token = "Token";
+        when(activationTokenRepository.findByToken(token)).thenReturn(null);
+
+        try {
+            activationTokenService.findValidToken(token);
+        } catch (InvalidActivationTokenException ex) {
+            return;
+        }
+
+        fail();
     }
 
 }

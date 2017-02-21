@@ -49,10 +49,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void validate(ActivationToken activationToken) {
-
         if(!activationTokenService.isValid(activationToken))
             throw new InvalidActivationTokenException();
-
     }
 
     private User initializeUserByRegisterRequest(RegisterRequest request) {

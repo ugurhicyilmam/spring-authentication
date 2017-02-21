@@ -58,7 +58,7 @@ public class ActivationTokenServiceImpl implements ActivationTokenService {
 
     @Override
     public boolean isValid(ActivationToken activationToken) {
-        return false;
+        return !(activationToken == null || activationToken.getValidUntil() < System.currentTimeMillis());
     }
 
 

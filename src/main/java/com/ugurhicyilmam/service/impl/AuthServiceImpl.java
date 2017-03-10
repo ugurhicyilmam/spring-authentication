@@ -129,6 +129,14 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
 
+    @Override
+    public void changePassword(User user, String currentPassword, String password) {
+        if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword()))
+            throw new LoginFailedException();
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
     private String createRecoveryTokenForUser(User user) {
         String token = TokenUtils.generateToken();
 

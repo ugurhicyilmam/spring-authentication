@@ -2,7 +2,6 @@ package com.ugurhicyilmam.service;
 
 import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
-import com.ugurhicyilmam.controller.request.ResetRequest;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 
@@ -24,4 +23,5 @@ public interface AuthService {
 
     void logout(String refreshToken);
 
+    void changePassword(User user, String currentPassword, String password);
 }

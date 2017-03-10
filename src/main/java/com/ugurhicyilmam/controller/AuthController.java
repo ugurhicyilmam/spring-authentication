@@ -1,5 +1,6 @@
 package com.ugurhicyilmam.controller;
 
+import com.ugurhicyilmam.controller.request.ChangePasswordRequest;
 import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.controller.request.ResetRequest;
@@ -7,11 +8,13 @@ import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.response.Status;
 import com.ugurhicyilmam.service.AuthService;
+import com.ugurhicyilmam.service.UserService;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -21,10 +24,12 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     @Autowired
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @RequestMapping(method = POST, value = "/register")
@@ -64,6 +69,13 @@ public class AuthController {
     @RequestMapping(method = GET, value = "/logout")
     public Response logout(@RequestHeader("Refresh-Token") String refreshToken) {
         authService.logout(refreshToken);
+        return Response.builder(Status.SUCCESS).build();
+    }
+
+    @RequestMapping(method = GET, value = "/change-password")
+    public Response changePassword(@RequestBody @Valid ChangePasswordRequest request, Principal principal) {
+        User user = userService.findByEmail(principal.getName());
+        authService.changePassword(user, request.getCurrentPassword(), request.getPassword());
         return Response.builder(Status.SUCCESS).build();
     }
 

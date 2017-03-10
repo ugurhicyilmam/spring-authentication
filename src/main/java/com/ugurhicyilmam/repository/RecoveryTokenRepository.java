@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RecoveryTokenRepository extends CrudRepository<RecoveryToken, Long> {
+    RecoveryToken findByToken(String token);
 }

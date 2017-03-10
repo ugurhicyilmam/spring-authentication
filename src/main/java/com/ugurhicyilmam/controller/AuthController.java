@@ -2,6 +2,7 @@ package com.ugurhicyilmam.controller;
 
 import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.controller.request.ResetRequest;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.response.Status;
@@ -51,5 +52,10 @@ public class AuthController {
     public Response recover(@RequestParam String email) {
         authService.recover(email);
         return Response.builder(Status.SUCCESS).build();
+    }
+
+    @RequestMapping(method = POST, value = "/reset")
+    public Response reset(@RequestParam String recoveryToken, @RequestBody @Valid ResetRequest request) {
+        return Response.builder(Status.SUCCESS).data(authService.reset(recoveryToken, request.getPassword())).build();
     }
 }

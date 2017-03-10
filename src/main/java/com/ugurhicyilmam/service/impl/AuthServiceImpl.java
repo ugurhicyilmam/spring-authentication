@@ -2,20 +2,22 @@ package com.ugurhicyilmam.service.impl;
 
 import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.controller.request.ResetRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.event.OnAccountRecover;
 import com.ugurhicyilmam.model.ActivationToken;
-import com.ugurhicyilmam.model.RefreshToken;
 import com.ugurhicyilmam.model.RecoveryToken;
+import com.ugurhicyilmam.model.RefreshToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
-import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.RecoveryTokenRepository;
+import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import com.ugurhicyilmam.service.exceptions.LoginFailedException;
+import com.ugurhicyilmam.service.exceptions.RecoveryTokenInvalidException;
 import com.ugurhicyilmam.service.exceptions.UserNotFoundException;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import com.ugurhicyilmam.service.transfer.TokenTransfer;
@@ -96,15 +98,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void recover(String email) {
         User user = userRepository.findByEmail(email);
-        if(user == null)
+        if (user == null)
             throw new UserNotFoundException();
         createRecoveryTokenForUser(user);
         eventPublisher.publishEvent(new OnAccountRecover(user));
     }
 
     @Override
-    public void reset(String resetToken, String password) {
-
+    public LoginTransfer reset(String token, String password) {
+        RecoveryToken recoveryToken = recoveryTokenRepository.findByToken(token);
+        if (recoveryToken == null || recoveryToken.getValidUntilInEpoch() < System.currentTimeMillis()) {
+            throw new RecoveryTokenInvalidException();
+        }
+        User user = recoveryToken.getUser();
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+        return login(new LoginRequest(user.getEmail(), password));
     }
 
     private String createRecoveryTokenForUser(User user) {

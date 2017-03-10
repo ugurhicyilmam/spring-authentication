@@ -19,4 +19,6 @@ public interface AuthService {
     void recover(String email);
 
     LoginTransfer reset(String recoveryToken, String password);
+
+    LoginTransfer refresh(String refreshToken);
 }

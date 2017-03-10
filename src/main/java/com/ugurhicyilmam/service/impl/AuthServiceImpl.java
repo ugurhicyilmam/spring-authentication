@@ -2,7 +2,6 @@ package com.ugurhicyilmam.service.impl;
 
 import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
-import com.ugurhicyilmam.controller.request.ResetRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.event.OnAccountRecover;
@@ -15,10 +14,7 @@ import com.ugurhicyilmam.repository.RecoveryTokenRepository;
 import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
-import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
-import com.ugurhicyilmam.service.exceptions.LoginFailedException;
-import com.ugurhicyilmam.service.exceptions.RecoveryTokenInvalidException;
-import com.ugurhicyilmam.service.exceptions.UserNotFoundException;
+import com.ugurhicyilmam.service.exceptions.*;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import com.ugurhicyilmam.service.transfer.TokenTransfer;
 import com.ugurhicyilmam.service.transfer.UserTransfer;
@@ -32,6 +28,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -116,11 +113,23 @@ public class AuthServiceImpl implements AuthService {
         return login(new LoginRequest(user.getEmail(), password));
     }
 
+    @Override
+    @Transactional
+    public LoginTransfer refresh(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(token);
+        if (refreshToken == null)
+            throw new RefreshTokenInvalidException();
+        User user = refreshToken.getUser();
+        refreshTokenRepository.deleteByToken(token);
+        return getLoginTransferForUser(user);
+    }
+
+
     private String createRecoveryTokenForUser(User user) {
         String token = TokenUtils.generateToken();
 
         RecoveryToken recoveryToken = new RecoveryToken();
-        recoveryToken.setToken(passwordEncoder.encode(token));
+        recoveryToken.setToken(token);
         recoveryToken.setUser(user);
         recoveryToken.setValidUntilInEpoch(System.currentTimeMillis() + resetPasswordTokenLifetime);
         user.setRecoveryToken(recoveryToken);
@@ -197,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
         String token = TokenUtils.generateToken();
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(passwordEncoder.encode(token));
+        refreshToken.setToken(token);
         refreshToken.setCreatedAt(System.currentTimeMillis());
         refreshToken.setUser(user);
         refreshTokenRepository.save(refreshToken);

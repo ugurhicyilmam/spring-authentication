@@ -6,4 +6,8 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface RefreshTokenRepository extends CrudRepository<RefreshToken, Long> {
     RefreshToken findByUser(User user);
+
+    RefreshToken findByToken(String token);
+
+    void deleteByToken(String token);
 }

@@ -58,4 +58,11 @@ public class AuthController {
     public Response reset(@RequestParam String recoveryToken, @RequestBody @Valid ResetRequest request) {
         return Response.builder(Status.SUCCESS).data(authService.reset(recoveryToken, request.getPassword())).build();
     }
+
+    @RequestMapping(method = GET, value = "/refresh")
+    public Response refresh(@RequestParam String refreshToken) {
+        return Response.builder(Status.SUCCESS).data(authService.refresh(refreshToken)).build();
+    }
+
+
 }

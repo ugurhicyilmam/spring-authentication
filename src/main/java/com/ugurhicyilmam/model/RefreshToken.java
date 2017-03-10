@@ -5,11 +5,11 @@ import lombok.Data;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 
 @Data
 @Entity
-public class ActivationToken {
+public class RefreshToken {
 
     @Id
     @GeneratedValue
@@ -17,8 +17,8 @@ public class ActivationToken {
 
     private String token;
 
-    @OneToOne
-    private User user;
+    private long createdAt;
 
-    private long validUntilInEpoch;
+    @ManyToOne
+    private User user;
 }

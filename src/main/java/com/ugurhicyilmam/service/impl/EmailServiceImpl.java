@@ -4,7 +4,6 @@ import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.EmailService;
 import com.ugurhicyilmam.util.enums.Language;
 import lombok.Data;
-import org.apache.commons.collections.map.HashedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +46,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendActivationEmail(User user) {
         Map<String, Object> emailData = new HashMap<>();
-        emailData.put("token", user.getActivationToken().getToken());
-        emailData.put("realName", user.getRealName());
+        emailData.put("activationToken", user.getActivationToken().getToken());
+        emailData.put("realName", user.getFirstName());
         sendEmailTo(user, EmailType.ACTIVATION, emailData);
     }
 
@@ -61,15 +60,22 @@ public class EmailServiceImpl implements EmailService {
         email.setTo(user.getEmail());
         email.setSubject(getSubjectForEmailType(emailType, user.getLanguage()));
         email.setContent(prepareContent(emailType, user.getLanguage(), emailData));
-
         sendHtmlEmail(email);
     }
 
     @Override
     public void sendWelcomeEmail(User user) {
-        Map<String, Object> emailData = new HashedMap();
-        emailData.put("realName", user.getRealName());
+        Map<String, Object> emailData = new HashMap<>();
+        emailData.put("realName", user.getFirstName());
         sendEmailTo(user, EmailType.WELCOME, emailData);
+    }
+
+    @Override
+    public void sendRecoveryEmail(User user) {
+        Map<String, Object> emailData = new HashMap<>();
+        emailData.put("recoveryToken", user.getRecoveryToken().getToken());
+        emailData.put("realName", user.getFirstName());
+        sendEmailTo(user, EmailType.RECOVER, emailData);
     }
 
     /**
@@ -118,7 +124,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     public enum EmailType {
-        ACTIVATION("email-activation"), WELCOME("email-welcome");
+        ACTIVATION("email-activation"), WELCOME("email-welcome"), RECOVER("email-recover");
 
         private final String template;
         private final String messageBase;

@@ -4,7 +4,7 @@
 <body>
 <p>Hello <span th:text="${realName}"></span>, just one more step!</p>
 <p>You just need to verify your email address by clicking the link below to use all the great features of <span th:text="${siteName}"></span></p>
-<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${token})}">Click Here!</a>
+<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${activationToken})}">Click Here!</a>
 <p>Please note that this link will expire in 2 days.</p>
 <p>If this email does not make sense, just ignore it.</p>
 <p th:text="footer"></p>

@@ -8,9 +8,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.Set;
 
 @Data
-@ToString(exclude = {"password", "activationToken"})
+@ToString(exclude = {"password", "activationToken", "recoveryToken", "refreshToken"})
 @Entity
 public class User implements UserDetails {
     @Id
@@ -30,6 +31,12 @@ public class User implements UserDetails {
 
     @OneToOne(mappedBy = "user")
     private transient ActivationToken activationToken;
+
+    @OneToOne(mappedBy = "user")
+    private transient RecoveryToken recoveryToken;
+
+    @OneToMany(mappedBy = "user")
+    private transient Set<RefreshToken> refreshToken;
 
     // ### UserDetails ###
     private long registeredAt;

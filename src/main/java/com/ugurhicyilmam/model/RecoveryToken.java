@@ -9,16 +9,15 @@ import javax.persistence.OneToOne;
 
 @Data
 @Entity
-public class ActivationToken {
-
+public class RecoveryToken {
     @Id
     @GeneratedValue
     private long id;
 
     private String token;
 
+    private long validUntilInEpoch;
+
     @OneToOne
     private User user;
-
-    private long validUntilInEpoch;
 }

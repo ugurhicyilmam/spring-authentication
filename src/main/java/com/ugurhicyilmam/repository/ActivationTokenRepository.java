@@ -8,4 +8,6 @@ public interface ActivationTokenRepository extends CrudRepository<ActivationToke
     ActivationToken findByUser(User user);
 
     ActivationToken findByToken(String token);
+
+    void deleteByUser(User user);
 }

@@ -11,4 +11,6 @@ public interface EmailService {
     void sendEmailTo(User user, EmailServiceImpl.EmailType emailType, Map<String, Object> emailArguments);
 
     void sendWelcomeEmail(User user);
+
+    void sendRecoveryEmail(User user);
 }

@@ -34,6 +34,6 @@ public class AuthControllerAdvice {
     @ExceptionHandler(InvalidActivationTokenException.class)
     @ResponseBody
     public Response processActivationTokenError(InvalidActivationTokenException ex) {
-        return Response.builder(Status.FAIL).message("Activation token is not valid").build();
+        return Response.builder(Status.FAIL).message("Activation recoverToken is not valid").build();
     }
 }

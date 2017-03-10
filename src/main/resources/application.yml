@@ -2,7 +2,9 @@
 application:
   validate-email-domain: true
   log-service-layer-as-info: true
-  activation-token-life-length: 48
+  activation-token-lifetime: 172800000 #2 days
+  access-token-lifetime: 600000 #10 minutes
+  recover-token-lifetime: 172800000 #2 days
   email.base-url: http://localhost:8080
   email.from: auth@localhost.com
   mail:

@@ -9,10 +9,7 @@ import com.ugurhicyilmam.response.Status;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -60,9 +57,14 @@ public class AuthController {
     }
 
     @RequestMapping(method = GET, value = "/refresh")
-    public Response refresh(@RequestParam String refreshToken) {
+    public Response refresh(@RequestHeader("Refresh-Token") String refreshToken) {
         return Response.builder(Status.SUCCESS).data(authService.refresh(refreshToken)).build();
     }
 
+    @RequestMapping(method = GET, value = "/logout")
+    public Response logout(@RequestHeader("Refresh-Token") String refreshToken) {
+        authService.logout(refreshToken);
+        return Response.builder(Status.SUCCESS).build();
+    }
 
 }

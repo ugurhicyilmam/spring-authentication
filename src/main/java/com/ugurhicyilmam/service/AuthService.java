@@ -21,4 +21,7 @@ public interface AuthService {
     LoginTransfer reset(String recoveryToken, String password);
 
     LoginTransfer refresh(String refreshToken);
+
+    void logout(String refreshToken);
+
 }

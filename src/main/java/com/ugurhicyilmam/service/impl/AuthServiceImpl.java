@@ -124,6 +124,10 @@ public class AuthServiceImpl implements AuthService {
         return getLoginTransferForUser(user);
     }
 
+    @Override
+    public void logout(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
+    }
 
     private String createRecoveryTokenForUser(User user) {
         String token = TokenUtils.generateToken();

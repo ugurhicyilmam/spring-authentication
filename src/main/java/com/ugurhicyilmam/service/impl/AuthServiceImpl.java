@@ -61,6 +61,11 @@ public class AuthServiceImpl implements AuthService {
         this.resetPasswordTokenLifetime = resetPasswordTokenLifetime;
     }
 
+    /**
+     * Creates new user record in database along with activation token, and publishes an OnAccountCreation event.
+     * @param request RegisterRequest containing user information.
+     * @return Created user record.
+     */
     @Override
     public User register(RegisterRequest request) {
         User user = createUserByRegistrationRequest(request);

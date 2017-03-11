@@ -1,0 +1,227 @@
+package com.ugurhicyilmam.service.impl;
+
+import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.event.OnAccountCreation;
+import com.ugurhicyilmam.model.ActivationToken;
+import com.ugurhicyilmam.model.User;
+import com.ugurhicyilmam.repository.ActivationTokenRepository;
+import com.ugurhicyilmam.repository.RecoveryTokenRepository;
+import com.ugurhicyilmam.repository.RefreshTokenRepository;
+import com.ugurhicyilmam.repository.UserRepository;
+import com.ugurhicyilmam.service.AuthService;
+import com.ugurhicyilmam.util.TokenUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.junit4.PowerMockRunnerDelegate;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(TokenUtils.class)
+@PowerMockRunnerDelegate(SpringRunner.class)
+public class AuthServiceImplTest {
+
+    @MockBean
+    private PasswordEncoder passwordEncoder;
+    @MockBean
+    private UserRepository userRepository;
+    @MockBean
+    private ActivationTokenRepository activationTokenRepository;
+    @MockBean
+    private RefreshTokenRepository refreshTokenRepository;
+    @MockBean
+    private RecoveryTokenRepository recoveryTokenRepository;
+    @MockBean
+    private ApplicationEventPublisher eventPublisher;
+
+    private long activationTokenLifetime;
+    private long accessTokenLifetime;
+    private long resetPasswordTokenLifetime;
+
+    private String generatedToken = "TOKEN_UTILS_GENERATED_TOKEN";
+
+    private AuthService authService;
+
+    @Before
+    public void setUp() throws Exception {
+
+        activationTokenLifetime = 100;
+        accessTokenLifetime = 100;
+        resetPasswordTokenLifetime = 100;
+
+        authService = new AuthServiceImpl(
+                passwordEncoder,
+                userRepository,
+                activationTokenRepository,
+                refreshTokenRepository,
+                recoveryTokenRepository,
+                eventPublisher,
+                activationTokenLifetime,
+                accessTokenLifetime,
+                resetPasswordTokenLifetime
+        );
+
+        PowerMockito.mockStatic(TokenUtils.class);
+        Mockito.when(TokenUtils.generateToken()).thenReturn(generatedToken);
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+
+    }
+
+    @Test
+    public void register_shouldCorrectlyInitializeUserObject() throws Exception {
+        RegisterRequest request = getRegisterRequest();
+
+        String encodedPassword = TokenUtils.generateToken();
+
+        when(passwordEncoder.encode(eq(request.getPassword()))).thenReturn(encodedPassword);
+
+        authService.register(request);
+
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).save(userArgumentCaptor.capture());
+        User registeredUser = userArgumentCaptor.getValue();
+
+        assertEquals(request.getEmail(), registeredUser.getEmail());
+        assertEquals(encodedPassword, registeredUser.getPassword());
+        assertEquals(request.getFirstName(), registeredUser.getFirstName());
+        assertEquals(request.getLastName(), registeredUser.getLastName());
+        assertEquals(request.getLanguage(), registeredUser.getLanguage().toString());
+        assertFalse(registeredUser.isEnabled());
+        assertTrue(registeredUser.isAccountNonExpired());
+        assertTrue(registeredUser.isAccountNonLocked());
+        assertTrue(registeredUser.isCredentialsNonExpired());
+        assertTrue(registeredUser.getRegisteredAt() < System.currentTimeMillis() + 50);
+        assertTrue(registeredUser.getRegisteredAt() > System.currentTimeMillis() - 50);
+    }
+
+    @Test
+    public void register_shouldCreateCorrectActivationTokenForUser() throws Exception {
+        RegisterRequest request = getRegisterRequest();
+
+        User registeredUser = authService.register(request);
+
+        ArgumentCaptor<ActivationToken> activationTokenArgumentCaptor = ArgumentCaptor.forClass(ActivationToken.class);
+        verify(activationTokenRepository, times(1)).save(activationTokenArgumentCaptor.capture());
+        ActivationToken savedToken = activationTokenArgumentCaptor.getValue();
+
+        assertEquals(generatedToken, savedToken.getToken());
+        assertEquals(registeredUser, savedToken.getUser());
+        assertEquals(registeredUser.getActivationToken(), savedToken);
+        assertTrue(savedToken.getValidUntilInEpoch() > System.currentTimeMillis() + activationTokenLifetime - 50);
+        assertTrue(savedToken.getValidUntilInEpoch() < System.currentTimeMillis() + activationTokenLifetime + 50);
+    }
+
+    @Test
+    public void register_shouldInvokeDeleteByUserBeforeSaveOfActivationTokenRepository() throws Exception {
+        authService.register(getRegisterRequest());
+
+        InOrder inOrder = Mockito.inOrder(activationTokenRepository);
+
+        inOrder.verify(activationTokenRepository, times(1)).deleteByUser(any(User.class));
+        inOrder.verify(activationTokenRepository, times(1)).save(any(ActivationToken.class));
+    }
+
+    @Test
+    public void register_shouldInvokeDeleteByUserOfActivationTokenRepositoryWithRegisteredUser() throws Exception {
+        User registeredUser = authService.register(getRegisterRequest());
+        verify(activationTokenRepository, times(1)).deleteByUser(eq(registeredUser));
+    }
+
+    @Test
+    public void register_shouldPublishEventForCorrectUser() throws Exception {
+        authService.register(getRegisterRequest());
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).save(userArgumentCaptor.capture());
+        User registeredUser = userArgumentCaptor.getValue();
+
+        ArgumentCaptor<OnAccountCreation> onAccountCreationArgumentCaptor = ArgumentCaptor.forClass(OnAccountCreation.class);
+        verify(eventPublisher, times(1)).publishEvent(onAccountCreationArgumentCaptor.capture());
+
+        OnAccountCreation firedEvent = onAccountCreationArgumentCaptor.getValue();
+
+        assertEquals(registeredUser, firedEvent.getUser());
+    }
+
+    @Test
+    public void register_shouldFollowCorrectAlgorithm() throws Exception {
+        User user = authService.register(getRegisterRequest());
+
+        InOrder inOrder = Mockito.inOrder(userRepository, activationTokenRepository, eventPublisher);
+
+        inOrder.verify(userRepository, times(1)).save(eq(user));
+        inOrder.verify(activationTokenRepository, times(1)).deleteByUser(eq(user));
+        inOrder.verify(activationTokenRepository, times(1)).save(any(ActivationToken.class));
+        inOrder.verify(eventPublisher, times(1)).publishEvent(any(OnAccountCreation.class));
+    }
+
+
+    @Test
+    public void activate() throws Exception {
+
+    }
+
+    @Test
+    public void resendActivationToken() throws Exception {
+
+    }
+
+    @Test
+    public void login() throws Exception {
+
+    }
+
+    @Test
+    public void recover() throws Exception {
+
+    }
+
+    @Test
+    public void reset() throws Exception {
+
+    }
+
+    @Test
+    public void refresh() throws Exception {
+
+    }
+
+    @Test
+    public void logout() throws Exception {
+
+    }
+
+    @Test
+    public void changePassword() throws Exception {
+
+    }
+
+    private RegisterRequest getRegisterRequest() {
+        RegisterRequest request = new RegisterRequest();
+        request.setEmail("ugur@example.com");
+        request.setPassword("123123");
+        request.setPasswordConfirmation("123123");
+        request.setFirstName("Ugur");
+        request.setLastName("Hicyilmam");
+        request.setLanguage("TR");
+        return request;
+    }
+
+}

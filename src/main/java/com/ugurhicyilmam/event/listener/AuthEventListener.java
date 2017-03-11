@@ -3,6 +3,7 @@ package com.ugurhicyilmam.event.listener;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.event.OnAccountRecover;
+import com.ugurhicyilmam.event.OnResendActivationToken;
 import com.ugurhicyilmam.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -35,5 +36,11 @@ public class AuthEventListener {
     @EventListener
     public void handleOnAccountRecover(OnAccountRecover event) {
         emailService.sendRecoveryEmail(event.getUser());
+    }
+
+    @Async
+    @EventListener
+    public void handleOnResendActivationToken(OnResendActivationToken event) {
+        emailService.sendActivationEmail(event.getUser());
     }
 }

@@ -5,6 +5,7 @@ import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.event.OnAccountRecover;
+import com.ugurhicyilmam.event.OnResendActivationToken;
 import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.RecoveryToken;
 import com.ugurhicyilmam.model.RefreshToken;
@@ -80,8 +81,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void resendActivationToken(User user) {
         createActivationTokenForUser(user);
-        // TODO: 10.03.2017 implement this
-//        eventPublisher.publishEvent(new OnResendActivationToken(user));
+        eventPublisher.publishEvent(new OnResendActivationToken(user));
     }
 
     @Override
@@ -93,15 +93,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void recover(String email) {
         User user = userRepository.findByEmail(email);
         if (user == null)
             throw new UserNotFoundException();
+        recoveryTokenRepository.deleteByUser(user);
         createRecoveryTokenForUser(user);
         eventPublisher.publishEvent(new OnAccountRecover(user));
     }
 
     @Override
+    @Transactional
     public LoginTransfer reset(String token, String password) {
         RecoveryToken recoveryToken = recoveryTokenRepository.findByToken(token);
         if (recoveryToken == null || recoveryToken.getValidUntilInEpoch() < System.currentTimeMillis()) {
@@ -110,6 +113,7 @@ public class AuthServiceImpl implements AuthService {
         User user = recoveryToken.getUser();
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
+        recoveryTokenRepository.deleteByToken(token);
         return login(new LoginRequest(user.getEmail(), password));
     }
 

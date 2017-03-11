@@ -110,6 +110,10 @@ public class AuthServiceImpl implements AuthService {
         return getLoginTransferForUser(user);
     }
 
+    /**
+     * Sends a recovery email for email address parameter if a corresponding user exists.
+     * @param email Email to which recovery email will be sent.
+     */
     @Override
     @Transactional
     public void recover(String email) {

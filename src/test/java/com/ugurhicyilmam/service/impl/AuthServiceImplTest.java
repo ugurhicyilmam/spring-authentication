@@ -4,8 +4,10 @@ import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
+import com.ugurhicyilmam.event.OnAccountRecover;
 import com.ugurhicyilmam.event.OnResendActivationToken;
 import com.ugurhicyilmam.model.ActivationToken;
+import com.ugurhicyilmam.model.RecoveryToken;
 import com.ugurhicyilmam.model.RefreshToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
@@ -15,11 +17,11 @@ import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import com.ugurhicyilmam.service.exceptions.LoginFailedException;
+import com.ugurhicyilmam.service.exceptions.UserNotFoundException;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import com.ugurhicyilmam.util.TokenUtils;
 import com.ugurhicyilmam.util.enums.Language;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,7 +61,7 @@ public class AuthServiceImplTest {
 
     private long activationTokenLifetime;
     private long accessTokenLifetime;
-    private long resetPasswordTokenLifetime;
+    private long recoveryTokenLifeTime;
 
     private String generatedToken = "TOKEN_UTILS_GENERATED_TOKEN";
 
@@ -70,7 +72,7 @@ public class AuthServiceImplTest {
 
         activationTokenLifetime = 100;
         accessTokenLifetime = 100;
-        resetPasswordTokenLifetime = 100;
+        recoveryTokenLifeTime = 100;
 
         authService = new AuthServiceImpl(
                 passwordEncoder,
@@ -81,7 +83,7 @@ public class AuthServiceImplTest {
                 eventPublisher,
                 activationTokenLifetime,
                 accessTokenLifetime,
-                resetPasswordTokenLifetime
+                recoveryTokenLifeTime
         );
 
         PowerMockito.mockStatic(TokenUtils.class);
@@ -249,10 +251,10 @@ public class AuthServiceImplTest {
 
         try {
             authService.activate(token);
-            Assert.fail();
         } catch (InvalidActivationTokenException ex) {
-            //test passed.
+            return;
         }
+        fail();
     }
 
     @Test
@@ -263,10 +265,10 @@ public class AuthServiceImplTest {
 
         try {
             authService.activate(token);
-            Assert.fail();
         } catch (InvalidActivationTokenException ex) {
-            //test passed.
+            return;
         }
+        fail();
     }
 
     @Test
@@ -330,10 +332,10 @@ public class AuthServiceImplTest {
 
         try {
             authService.login(request);
-            fail();
         } catch (LoginFailedException ex) {
-            //test passed
+            return;
         }
+        fail();
     }
 
 
@@ -345,10 +347,10 @@ public class AuthServiceImplTest {
 
         try {
             authService.login(request);
-            fail();
         } catch (LoginFailedException ex) {
-            //test passed
+            return;
         }
+        fail();
     }
 
     @Test
@@ -360,15 +362,74 @@ public class AuthServiceImplTest {
 
         try {
             authService.login(request);
-            fail();
         } catch (LoginFailedException ex) {
-            //test passed
+            return;
         }
+        fail();
     }
 
     @Test
-    public void recover() throws Exception {
+    public void recover_shouldThrowExceptionWhenUserNotFound() throws Exception {
+        String email = "ugur@example.com";
 
+        when(userRepository.findByEmail(eq(email))).thenReturn(null);
+
+        try {
+            authService.recover(email);
+        } catch (UserNotFoundException ex) {
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void recover_shouldCreateRecoveryTokenWhenUserFound() throws Exception {
+        String email = "ugur@example.com";
+        User user = new User();
+
+        when(userRepository.findByEmail(eq(email))).thenReturn(user);
+
+        authService.recover(email);
+
+        ArgumentCaptor<RecoveryToken> recoveryTokenArgumentCaptor = ArgumentCaptor.forClass(RecoveryToken.class);
+        verify(recoveryTokenRepository, times(1)).save(recoveryTokenArgumentCaptor.capture());
+        RecoveryToken recoveryToken = recoveryTokenArgumentCaptor.getValue();
+
+        assertEquals(user, recoveryToken.getUser());
+        assertEquals(generatedToken, recoveryToken.getToken());
+        assertTrue(recoveryToken.getValidUntilInEpoch() < System.currentTimeMillis() + recoveryTokenLifeTime + 50);
+        assertTrue(recoveryToken.getValidUntilInEpoch() > System.currentTimeMillis() + recoveryTokenLifeTime - 50);
+    }
+
+    @Test
+    public void recover_shouldPublishOnAccountRecoverEventWithCorrectUser() throws Exception {
+        String email = "ugur@example.com";
+        User user = new User();
+
+        when(userRepository.findByEmail(eq(email))).thenReturn(user);
+
+        authService.recover(email);
+
+        ArgumentCaptor<OnAccountRecover> onAccountRecoverArgumentCaptor = ArgumentCaptor.forClass(OnAccountRecover.class);
+        verify(eventPublisher, times(1)).publishEvent(onAccountRecoverArgumentCaptor.capture());
+        OnAccountRecover firedEvent = onAccountRecoverArgumentCaptor.getValue();
+
+        assertEquals(user, firedEvent.getUser());
+    }
+
+    @Test
+    public void recover_shouldInvokeDeleteByUserWithCorrectUserBeforeSave() throws Exception {
+        String email = "ugur@example.com";
+        User user = new User();
+
+        when(userRepository.findByEmail(eq(email))).thenReturn(user);
+
+        authService.recover(email);
+
+        InOrder inOrder = Mockito.inOrder(recoveryTokenRepository);
+
+        inOrder.verify(recoveryTokenRepository, times(1)).deleteByUser(eq(user));
+        inOrder.verify(recoveryTokenRepository, times(1)).save(any(RecoveryToken.class));
     }
 
     @Test

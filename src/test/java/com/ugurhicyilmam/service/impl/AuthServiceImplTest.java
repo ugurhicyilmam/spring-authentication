@@ -1,10 +1,12 @@
 package com.ugurhicyilmam.service.impl;
 
+import com.ugurhicyilmam.controller.request.LoginRequest;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.event.OnResendActivationToken;
 import com.ugurhicyilmam.model.ActivationToken;
+import com.ugurhicyilmam.model.RefreshToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
 import com.ugurhicyilmam.repository.RecoveryTokenRepository;
@@ -12,7 +14,10 @@ import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
+import com.ugurhicyilmam.service.exceptions.LoginFailedException;
+import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import com.ugurhicyilmam.util.TokenUtils;
+import com.ugurhicyilmam.util.enums.Language;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -295,8 +300,70 @@ public class AuthServiceImplTest {
     }
 
     @Test
-    public void login() throws Exception {
+    public void login_shouldGenerateAccessAndRefreshTokensWhenCredentialsValid() throws Exception {
+        LoginRequest request = new LoginRequest("ugur@example.com", "123456");
+        User user = new User();
+        user.setPassword("encoded_password");
+        user.setLanguage(Language.TR);
 
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(user);
+        when(passwordEncoder.matches(eq(request.getPassword()), eq(user.getPassword()))).thenReturn(true);
+
+        LoginTransfer loginTransfer = authService.login(request);
+
+        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getAccessToken());
+        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getRefreshToken());
+
+        ArgumentCaptor<RefreshToken> refreshTokenArgumentCaptor = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository, times(1)).save(refreshTokenArgumentCaptor.capture());
+        RefreshToken generatedRefreshToken = refreshTokenArgumentCaptor.getValue();
+
+        assertEquals(generatedToken, generatedRefreshToken.getToken());
+        assertEquals(user, generatedRefreshToken.getUser());
+    }
+
+    @Test
+    public void login_shouldThrowExceptionWhenUserNotFound() throws Exception {
+        LoginRequest request = new LoginRequest("ugur@example.com", "123456");
+
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(null);
+
+        try {
+            authService.login(request);
+            fail();
+        } catch (LoginFailedException ex) {
+            //test passed
+        }
+    }
+
+
+    @Test
+    public void login_shouldThrowExceptionWhenPasswordNull() throws Exception {
+        LoginRequest request = new LoginRequest("ugur@example.com", null);
+
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(new User());
+
+        try {
+            authService.login(request);
+            fail();
+        } catch (LoginFailedException ex) {
+            //test passed
+        }
+    }
+
+    @Test
+    public void login_shouldThrowExceptionWhenPasswordWrong() throws Exception {
+        LoginRequest request = new LoginRequest("ugur@example.com", "123123");
+
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(new User());
+        when(passwordEncoder.matches(eq(request.getPassword()), anyString())).thenReturn(false);
+
+        try {
+            authService.login(request);
+            fail();
+        } catch (LoginFailedException ex) {
+            //test passed
+        }
     }
 
     @Test

@@ -87,12 +87,21 @@ public class AuthServiceImpl implements AuthService {
         eventPublisher.publishEvent(new OnAccountActivation(user));
     }
 
+    /**
+     * Generates an activation token for user and publishes OnResendActivationToken event.
+     * @param user User object for which the activation token to be generated.
+     */
     @Override
     public void resendActivationToken(User user) {
         createActivationTokenForUser(user);
         eventPublisher.publishEvent(new OnResendActivationToken(user));
     }
 
+    /**
+     * Validates user credentials and generates access and refresh tokens
+     * @param request LoginRequest containing user credentials.
+     * @return LoginTransfer containing access and refresh tokens along with user information.
+     */
     @Override
     public LoginTransfer login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail());

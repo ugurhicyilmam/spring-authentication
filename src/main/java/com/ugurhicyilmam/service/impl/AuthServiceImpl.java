@@ -74,6 +74,10 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
+    /**
+     * Activates user with valid activation token, removes corresponding ActivationToken and publishes OnAccountActivation event.
+     * @param token Activation token sent by email.
+     */
     @Override
     public void activate(String token) {
         ActivationToken activationToken = validateAndFetchActivationToken(token);

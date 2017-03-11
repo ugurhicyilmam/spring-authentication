@@ -1,6 +1,7 @@
 package com.ugurhicyilmam.service.impl;
 
 import com.ugurhicyilmam.controller.request.RegisterRequest;
+import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
 import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
@@ -174,8 +175,60 @@ public class AuthServiceImplTest {
 
 
     @Test
-    public void activate() throws Exception {
+    public void activate_shouldActivateUserWhenValidActivationToken() throws Exception {
+        String token = generatedToken;
+        User user = new User();
+        user.setEnabled(false);
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setUser(user);
+        activationToken.setValidUntilInEpoch(System.currentTimeMillis() + activationTokenLifetime);
 
+        when(activationTokenRepository.findByToken(eq(token))).thenReturn(activationToken);
+
+        assertFalse(user.isEnabled());
+
+        authService.activate(token);
+
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).save(userArgumentCaptor.capture());
+        User activatedUser = userArgumentCaptor.getValue();
+
+        assertEquals(activatedUser, user);
+        assertTrue(activatedUser.isEnabled());
+    }
+
+    @Test
+    public void activate_shouldInvokeDeleteByUserOfActivationTokenRepositoryWhenTokenValid() throws Exception {
+        String token = generatedToken;
+        User user = new User();
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setValidUntilInEpoch(System.currentTimeMillis() + activationTokenLifetime);
+        activationToken.setUser(user);
+        when(activationTokenRepository.findByToken(eq(token))).thenReturn(activationToken);
+
+        authService.activate(token);
+
+        verify(activationTokenRepository, times(1)).deleteByUser(eq(user));
+    }
+
+    @Test
+    public void activate_shouldPublishOnAccountActivationEventWhenTokenValidWithCorrectUser() throws Exception {
+        String token = generatedToken;
+        User user = new User();
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setValidUntilInEpoch(System.currentTimeMillis() + activationTokenLifetime);
+        activationToken.setUser(user);
+        when(activationTokenRepository.findByToken(eq(token))).thenReturn(activationToken);
+
+        authService.activate(token);
+
+        ArgumentCaptor<OnAccountActivation> onAccountActivationArgumentCaptor = ArgumentCaptor.forClass(OnAccountActivation.class);
+
+        verify(eventPublisher, times(1)).publishEvent(onAccountActivationArgumentCaptor.capture());
+
+        OnAccountActivation publishedEvent = onAccountActivationArgumentCaptor.getValue();
+
+        assertEquals(user, publishedEvent.getUser());
     }
 
     @Test

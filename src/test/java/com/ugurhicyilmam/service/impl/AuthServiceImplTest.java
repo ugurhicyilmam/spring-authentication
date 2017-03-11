@@ -3,6 +3,7 @@ package com.ugurhicyilmam.service.impl;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.event.OnAccountActivation;
 import com.ugurhicyilmam.event.OnAccountCreation;
+import com.ugurhicyilmam.event.OnResendActivationToken;
 import com.ugurhicyilmam.model.ActivationToken;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.repository.ActivationTokenRepository;
@@ -10,8 +11,10 @@ import com.ugurhicyilmam.repository.RecoveryTokenRepository;
 import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
+import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
 import com.ugurhicyilmam.util.TokenUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -232,8 +235,63 @@ public class AuthServiceImplTest {
     }
 
     @Test
-    public void resendActivationToken() throws Exception {
+    public void activate_shouldThrowExceptionWhenTokenExpired() throws Exception {
+        String token = generatedToken;
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setValidUntilInEpoch(System.currentTimeMillis() - 10);
 
+        when(activationTokenRepository.findByToken(eq(token))).thenReturn(activationToken);
+
+        try {
+            authService.activate(token);
+            Assert.fail();
+        } catch (InvalidActivationTokenException ex) {
+            //test passed.
+        }
+    }
+
+    @Test
+    public void activate_shouldThrowExceptionWhenTokenNotFound() throws Exception {
+        String token = generatedToken;
+
+        when(activationTokenRepository.findByToken(eq(token))).thenReturn(null);
+
+        try {
+            authService.activate(token);
+            Assert.fail();
+        } catch (InvalidActivationTokenException ex) {
+            //test passed.
+        }
+    }
+
+    @Test
+    public void resendActivationToken_shouldCreateCorrectActivationTokenForUser() throws Exception {
+        User user = new User();
+
+        authService.resendActivationToken(user);
+
+        ArgumentCaptor<ActivationToken> activationTokenArgumentCaptor = ArgumentCaptor.forClass(ActivationToken.class);
+        verify(activationTokenRepository, times(1)).save(activationTokenArgumentCaptor.capture());
+        ActivationToken savedToken = activationTokenArgumentCaptor.getValue();
+
+        assertEquals(generatedToken, savedToken.getToken());
+        assertEquals(user, savedToken.getUser());
+        assertEquals(user.getActivationToken(), savedToken);
+        assertTrue(savedToken.getValidUntilInEpoch() > System.currentTimeMillis() + activationTokenLifetime - 50);
+        assertTrue(savedToken.getValidUntilInEpoch() < System.currentTimeMillis() + activationTokenLifetime + 50);
+    }
+
+    @Test
+    public void resendActivationToken_shouldPublishOnResendActivationEventForCorrectUser() throws Exception {
+        User user = new User();
+
+        authService.resendActivationToken(user);
+
+        ArgumentCaptor<OnResendActivationToken> onResendActivationTokenArgumentCaptor = ArgumentCaptor.forClass(OnResendActivationToken.class);
+        verify(eventPublisher, times(1)).publishEvent(onResendActivationTokenArgumentCaptor.capture());
+        OnResendActivationToken firedEvent = onResendActivationTokenArgumentCaptor.getValue();
+
+        assertEquals(user, firedEvent.getUser());
     }
 
     @Test

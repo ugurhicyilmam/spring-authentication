@@ -31,7 +31,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -44,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RecoveryTokenRepository recoveryTokenRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private static final Map<User, Set<AccessToken>> accessTokens = new ConcurrentHashMap<>();
+    private static final Map<String, AccessToken> accessTokens = new ConcurrentHashMap<>();
     private final long activationTokenLifetime;
     private final long accessTokenLifetime;
     private final long resetPasswordTokenLifetime;
@@ -63,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Creates new user record in database along with activation token, and publishes an OnAccountCreation event.
+     *
      * @param request RegisterRequest containing user information.
      * @return Created user record.
      */
@@ -76,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Activates user with valid activation token, removes corresponding ActivationToken and publishes OnAccountActivation event.
+     *
      * @param token Activation token sent by email.
      */
     @Override
@@ -89,6 +90,7 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Generates an activation token for user and publishes OnResendActivationToken event.
+     *
      * @param user User object for which the activation token to be generated.
      */
     @Override
@@ -98,7 +100,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
+     * Returns loginTransfer object for given user.
+     *
+     * @param user User to be logged in.
+     * @return loginTransfer containing access and refresh tokens along with user information.
+     */
+    @Override
+    public LoginTransfer login(User user) {
+        return getLoginTransferForUser(user);
+    }
+
+
+    /**
      * Validates user credentials and generates access and refresh tokens
+     *
      * @param request LoginRequest containing user credentials.
      * @return LoginTransfer containing access and refresh tokens along with user information.
      */
@@ -112,6 +127,7 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Sends a recovery email for email address parameter if a corresponding user exists.
+     *
      * @param email Email to which recovery email will be sent.
      */
     @Override
@@ -125,9 +141,16 @@ public class AuthServiceImpl implements AuthService {
         eventPublisher.publishEvent(new OnAccountRecover(user));
     }
 
+    /**
+     * Sets password if given token is valid.
+     *
+     * @param token    Recovery token sent by email.
+     * @param password Password to be set.
+     * @return User object whose password reset.
+     */
     @Override
     @Transactional
-    public LoginTransfer reset(String token, String password) {
+    public User reset(String token, String password) {
         RecoveryToken recoveryToken = recoveryTokenRepository.findByToken(token);
         if (recoveryToken == null || recoveryToken.getValidUntilInEpoch() < System.currentTimeMillis()) {
             throw new RecoveryTokenInvalidException();
@@ -135,10 +158,16 @@ public class AuthServiceImpl implements AuthService {
         User user = recoveryToken.getUser();
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
-        recoveryTokenRepository.deleteByToken(token);
-        return login(new LoginRequest(user.getEmail(), password));
+        recoveryTokenRepository.deleteByUser(user);
+        return user;
     }
 
+    /**
+     * Removes refresh token by token and returns new access and refresh tokens for user.
+     *
+     * @param token Token of a refreshToken
+     * @return LoginTransfer containing access and refresh tokens along with user information.
+     */
     @Override
     @Transactional
     public LoginTransfer refresh(String token) {
@@ -150,16 +179,40 @@ public class AuthServiceImpl implements AuthService {
         return getLoginTransferForUser(user);
     }
 
+    /**
+     * Removes refresh token and access tokens of user.
+     *
+     * @param refreshToken RefreshToken to be removed
+     * @param accessToken  AccessToken to be removed
+     */
     @Override
-    public void logout(String refreshToken) {
+    public void logout(String refreshToken, String accessToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
+        accessTokens.remove(accessToken);
+    }
+
+    /**
+     * Gets user if it is associated with an access token.
+     * @param accessToken Access token to be checked for its user association.
+     * @return User object associated with an access token.
+     */
+    @Override
+    public User getUserByValidAccessToken(String accessToken) {
+        if (!verifyAccessToken(accessToken) || accessTokens.get(accessToken).getUser() == null) {
+            throw new AccessTokenInvalidException();
+        }
+        return accessTokens.get(accessToken).getUser();
+    }
+
+    private boolean verifyAccessToken(String token) {
+        return accessTokens.containsKey(token) && accessTokens.get(token).getValidUntilInEpoch() > System.currentTimeMillis();
     }
 
     @Override
-    public void changePassword(User user, String currentPassword, String password) {
+    public void changePassword(User user, String currentPassword, String newPassword) {
         if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPassword()))
             throw new LoginFailedException();
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 
@@ -220,9 +273,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private String createAccessTokenForUser(User user) {
-        accessTokens.putIfAbsent(user, ConcurrentHashMap.newKeySet());
         AccessToken accessToken = new AccessToken(user);
-        accessTokens.get(user).add(accessToken);
+
+        accessTokens.put(accessToken.getToken(), accessToken);
+
         return accessToken.getToken();
     }
 
@@ -254,9 +308,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Getter
     private class AccessToken {
-        private String token;
-        private long validUntilInEpoch;
-        private User user;
+        private final String token;
+        private final long validUntilInEpoch;
+        private final User user;
 
         AccessToken(User user) {
             this.user = user;

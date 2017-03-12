@@ -17,11 +17,16 @@ public interface AuthService {
 
     void recover(String email);
 
-    LoginTransfer reset(String recoveryToken, String password);
+    User reset(String recoveryToken, String password);
 
     LoginTransfer refresh(String refreshToken);
 
-    void logout(String refreshToken);
-
     void changePassword(User user, String currentPassword, String password);
+
+    LoginTransfer login(User user);
+
+    void logout(String refreshToken, String accessToken);
+
+    User getUserByValidAccessToken(String accessToken);
+
 }

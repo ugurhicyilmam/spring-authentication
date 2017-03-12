@@ -15,9 +15,7 @@ import com.ugurhicyilmam.repository.RecoveryTokenRepository;
 import com.ugurhicyilmam.repository.RefreshTokenRepository;
 import com.ugurhicyilmam.repository.UserRepository;
 import com.ugurhicyilmam.service.AuthService;
-import com.ugurhicyilmam.service.exceptions.InvalidActivationTokenException;
-import com.ugurhicyilmam.service.exceptions.LoginFailedException;
-import com.ugurhicyilmam.service.exceptions.UserNotFoundException;
+import com.ugurhicyilmam.service.exceptions.*;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import com.ugurhicyilmam.util.TokenUtils;
 import com.ugurhicyilmam.util.enums.Language;
@@ -433,23 +431,242 @@ public class AuthServiceImplTest {
     }
 
     @Test
-    public void reset() throws Exception {
+    public void reset_shouldSetPasswordWhenTokenValid() throws Exception {
+        String token = "token";
+        String password = "new_password";
+        String encodedPassword = "encoded_password";
+
+        RecoveryToken recoveryToken = new RecoveryToken();
+        recoveryToken.setValidUntilInEpoch(System.currentTimeMillis() + recoveryTokenLifeTime);
+        User user = new User();
+        recoveryToken.setUser(user);
+
+        when(recoveryTokenRepository.findByToken(eq(token))).thenReturn(recoveryToken);
+        when(passwordEncoder.encode(eq(password))).thenReturn(encodedPassword);
+
+        User returnedUser = authService.reset(token, password);
+
+        ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).save(userArgumentCaptor.capture());
+        User updatedUser = userArgumentCaptor.getValue();
+
+        assertEquals(user, updatedUser);
+        assertEquals(encodedPassword, updatedUser.getPassword());
+        assertEquals(user, returnedUser);
+        assertEquals(encodedPassword, returnedUser.getPassword());
+    }
+
+    @Test
+    public void reset_shouldTokenShouldBeDeletedAfterUpdate() throws Exception {
+        String token = "token";
+        String password = "new_password";
+        String encodedPassword = "encoded_password";
+
+        RecoveryToken recoveryToken = new RecoveryToken();
+        recoveryToken.setValidUntilInEpoch(System.currentTimeMillis() + recoveryTokenLifeTime);
+        User user = new User();
+        recoveryToken.setUser(user);
+
+        when(recoveryTokenRepository.findByToken(eq(token))).thenReturn(recoveryToken);
+        when(passwordEncoder.encode(eq(password))).thenReturn(encodedPassword);
+
+        authService.reset(token, password);
+
+        InOrder inOrder = Mockito.inOrder(userRepository, recoveryTokenRepository);
+
+        inOrder.verify(userRepository, times(1)).save(eq(user));
+        inOrder.verify(recoveryTokenRepository, times(1)).deleteByUser(eq(user));
+    }
+
+    @Test
+    public void reset_shouldThrowExceptionWhenTokenNotFound() throws Exception {
+        String token = "token";
+        when(recoveryTokenRepository.findByToken(eq(token))).thenReturn(null);
+
+        try {
+            authService.reset(token, "password");
+        } catch (RecoveryTokenInvalidException ex) {
+            // passed
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void reset_shouldThrowExceptionWhenTokenExpired() throws Exception {
+        String token = "token";
+
+        RecoveryToken recoveryToken = new RecoveryToken();
+        recoveryToken.setValidUntilInEpoch(System.currentTimeMillis() - 50);
+
+        when(recoveryTokenRepository.findByToken(eq(token))).thenReturn(recoveryToken);
+
+        try {
+            authService.reset(token, "password");
+        } catch (RecoveryTokenInvalidException ex) {
+            // passed
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void refresh_shouldReturnLoginTransferWithCorrectRefreshToken() throws Exception {
+        String token = "token";
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(token);
+        User user = new User();
+        user.setLanguage(Language.EN);
+        refreshToken.setUser(user);
+
+        when(refreshTokenRepository.findByToken(eq(token))).thenReturn(refreshToken);
+
+        LoginTransfer loginTransfer = authService.refresh(token);
+
+        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getAccessToken());
+        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getRefreshToken());
+
+        ArgumentCaptor<RefreshToken> refreshTokenArgumentCaptor = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository, times(1)).save(refreshTokenArgumentCaptor.capture());
+        RefreshToken generatedRefreshToken = refreshTokenArgumentCaptor.getValue();
+
+        assertEquals(generatedToken, generatedRefreshToken.getToken());
+        assertEquals(user, generatedRefreshToken.getUser());
+    }
+
+    @Test
+    public void refresh_shouldDeleteOldRefreshTokenTokenBeforeCreatingNew() throws Exception {
+        String token = "token";
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(token);
+        User user = new User();
+        user.setLanguage(Language.EN);
+        refreshToken.setUser(user);
+
+        when(refreshTokenRepository.findByToken(eq(token))).thenReturn(refreshToken);
+
+        authService.refresh(token);
+
+        InOrder inOrder = Mockito.inOrder(refreshTokenRepository);
+        inOrder.verify(refreshTokenRepository, times(1)).deleteByToken(eq(token));
+        inOrder.verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));
+    }
+
+    @Test
+    public void refresh_shouldThrowExceptionWhenTokenNotFound() throws Exception {
+        String token = "token";
+
+        when(refreshTokenRepository.findByToken(eq(token))).thenReturn(null);
+
+        try {
+            authService.refresh(token);
+        } catch (RefreshTokenInvalidException ex) {
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void getUserByValidAccessToken_shouldReturnUserWithValidAccessToken() throws Exception {
+        LoginRequest request = new LoginRequest("ugur@example.com", "123456");
+        User user = new User();
+        user.setPassword("encoded_password");
+        user.setLanguage(Language.TR);
+
+        when(userRepository.findByEmail(eq(request.getEmail()))).thenReturn(user);
+        when(passwordEncoder.matches(eq(request.getPassword()), eq(user.getPassword()))).thenReturn(true);
+
+        LoginTransfer loginTransfer = authService.login(request);
+
+        assertEquals(user, authService.getUserByValidAccessToken(loginTransfer.getTokenTransfer().getAccessToken()));
+    }
+
+    @Test
+    public void getUserByValidAccessToken_shouldThrowExceptionWithInvalidToken() throws Exception {
+        String accessToken = "acces_token";
+
+        try {
+            authService.getUserByValidAccessToken(accessToken);
+        } catch (AccessTokenInvalidException ex) {
+            return;
+        }
+        fail();
 
     }
 
     @Test
-    public void refresh() throws Exception {
+    public void logout_shouldRemoveRefreshTokenIfExists() throws Exception {
+        String refreshToken = "refresh_token";
 
+        authService.logout(refreshToken, "");
+
+        verify(refreshTokenRepository, times(1)).deleteByToken(eq(refreshToken));
     }
 
     @Test
-    public void logout() throws Exception {
+    public void logout_shouldRemoveAccessToken() throws Exception {
+        login_shouldGenerateAccessAndRefreshTokensWhenCredentialsValid(); // this test logs in the user.
 
+        assertNotNull(authService.getUserByValidAccessToken(generatedToken));
+
+        authService.logout("", generatedToken);
+
+        try {
+            authService.getUserByValidAccessToken(generatedToken);
+        } catch (AccessTokenInvalidException ex) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test
+    public void changePassword_shouldSetPasswordWhenCurrentPasswordCorrect() throws Exception {
+        String currentPassword = "password";
+        String newPassword = "new_password";
+        String encodedCurrentPassword = "encoded_password";
+        String encodedNewPassword = "encoded_new_password";
+
+        User user = new User();
+        user.setPassword(encodedCurrentPassword);
+
+        when(passwordEncoder.matches(eq(currentPassword), eq(encodedCurrentPassword))).thenReturn(true);
+        when(passwordEncoder.encode(eq(currentPassword))).thenReturn(encodedCurrentPassword);
+        when(passwordEncoder.encode(eq(newPassword))).thenReturn(encodedNewPassword);
+
+        authService.changePassword(user, currentPassword, newPassword);
+
+        assertEquals(encodedNewPassword, user.getPassword());
     }
 
     @Test
-    public void changePassword() throws Exception {
+    public void changePassword_shouldThrowExceptionIfCurrentPasswordWrong() throws Exception {
+        String currentPassword = "password";
+        String userPassword = "user_password";
 
+        User user = new User();
+        user.setPassword(userPassword);
+
+        when(passwordEncoder.matches(eq(currentPassword), eq(userPassword))).thenReturn(false);
+
+        try {
+            authService.changePassword(user, currentPassword, "new_password");
+        } catch (LoginFailedException ex) {
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void changePassword_shouldThrowExceptionWhenCurrentPasswordNull() throws Exception {
+        String currentPassword = null;
+
+        try {
+            authService.changePassword(new User(), currentPassword, "new_password");
+        } catch (LoginFailedException ex) {
+            return;
+        }
+        fail();
     }
 
     private RegisterRequest getRegisterRequest() {

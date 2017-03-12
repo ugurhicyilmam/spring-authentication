@@ -9,7 +9,6 @@ import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.response.Status;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.UserService;
-import com.ugurhicyilmam.service.transfer.LoginTransfer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +34,7 @@ public class AuthController {
     @RequestMapping(method = POST, value = "/register")
     public Response register(@RequestBody @Valid RegisterRequest request) {
         User user = authService.register(request);
-        LoginTransfer loginTransfer = authService.login(new LoginRequest(request.getEmail(), request.getPassword()));
-        return Response.builder(Status.SUCCESS).data(loginTransfer).build();
+        return Response.builder(Status.SUCCESS).data(authService.login(user)).build();
     }
 
     @RequestMapping(method = GET, value = "/activate")
@@ -58,7 +56,8 @@ public class AuthController {
 
     @RequestMapping(method = POST, value = "/reset")
     public Response reset(@RequestParam String recoveryToken, @RequestBody @Valid ResetRequest request) {
-        return Response.builder(Status.SUCCESS).data(authService.reset(recoveryToken, request.getPassword())).build();
+        User user = authService.reset(recoveryToken, request.getPassword());
+        return Response.builder(Status.SUCCESS).data(authService.login(user)).build();
     }
 
     @RequestMapping(method = GET, value = "/refresh")
@@ -67,8 +66,8 @@ public class AuthController {
     }
 
     @RequestMapping(method = GET, value = "/logout")
-    public Response logout(@RequestHeader("Refresh-Token") String refreshToken) {
-        authService.logout(refreshToken);
+    public Response logout(@RequestHeader("Refresh-Token") String refreshToken, @RequestHeader("Access-Token") String accessToken) {
+        authService.logout(refreshToken, accessToken);
         return Response.builder(Status.SUCCESS).build();
     }
 
@@ -78,5 +77,4 @@ public class AuthController {
         authService.changePassword(user, request.getCurrentPassword(), request.getPassword());
         return Response.builder(Status.SUCCESS).build();
     }
-
 }

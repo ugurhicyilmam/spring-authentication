@@ -1,8 +1,10 @@
 package com.ugurhicyilmam.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.service.transfer.LoginTransfer;
+import com.ugurhicyilmam.service.transfer.UserTransfer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,8 +12,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("unchecked")
@@ -21,6 +25,9 @@ public class AuthControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Before
     public void setUp() throws Exception {
@@ -43,11 +50,10 @@ public class AuthControllerTest {
         request.setPassword("123123");
         request.setPasswordConfirmation("123123");
 
-        Response<LoginTransfer> response = restTemplate.postForObject("/api/auth/register", request, Response.class);
+        String response = restTemplate.postForObject("/api/auth/register", request, String.class);
 
-        System.out.println("#######");
-        System.out.println(response);
-        fail();
+        assertEquals(request.getFirstName(), JsonPath.read(response, "$.data.userInformation.firstName"));
+        assertEquals(request.getLastName(), JsonPath.read(response, "$.data.userInformation.lastName"));
     }
 
     @Test

@@ -32,15 +32,17 @@ public class EmailServiceImpl implements EmailService {
     private final MessageSource messageSource;
     private final String baseUrl;
     private final String emailFrom;
+    private final String siteName;
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired
-    public EmailServiceImpl(JavaMailSender mailSender, TemplateEngine emailTemplateEngine, MessageSource messageSource, @Value("${application.email.base-url}") String baseUrl, @Value("${application.email.from}") String emailFrom) {
+    public EmailServiceImpl(JavaMailSender mailSender, TemplateEngine emailTemplateEngine, MessageSource messageSource, @Value("${application.email.base-url}") String baseUrl, @Value("${application.email.from}") String emailFrom, @Value("${application.name}") String siteName) {
         this.mailSender = mailSender;
         this.emailTemplateEngine = emailTemplateEngine;
         this.messageSource = messageSource;
         this.baseUrl = baseUrl;
         this.emailFrom = emailFrom;
+        this.siteName = siteName;
     }
 
     @Override
@@ -92,6 +94,7 @@ public class EmailServiceImpl implements EmailService {
         Context context = new Context();
         //put globals into context
         context.setVariable("serverUrl", baseUrl);
+        context.setVariable("siteName", siteName);
         args.forEach(context::setVariable);
         String templatePath = "email/" + language.toString().toLowerCase() + "/" + emailType.getTemplate();
         return emailTemplateEngine.process(templatePath, context);
@@ -105,7 +108,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
             messageHelper.setFrom(emailFrom);
             messageHelper.setTo(email.getTo());
-            messageHelper.setSubject(email.getSubject());
+            messageHelper.setSubject(email.getSubject() + " - " + siteName);
             messageHelper.setText(email.getContent(), true);
         };
         try {

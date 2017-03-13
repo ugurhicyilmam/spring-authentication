@@ -2,11 +2,11 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head></head>
 <body>
-<p>Hello <span th:text="${realName}"></span>, just one more step!</p>
-<p>You just need to verify your email address by clicking the link below to use all the great features of <span th:text="${siteName}"></span></p>
-<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${recoveryToken})}">Click Here!</a>
+<p>Selam <span th:text="${realName}"></span>,</p>
+<p>Şifreni sıfırlamak için aşağıdaki adresi ziyaret edebilirsin.</p>
+<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${recoveryToken})}">Şifre Sıfırlama</a>
 <p>Please note that this link will expire in 2 days.</p>
 <p>If this email does not make sense, just ignore it.</p>
-<p th:text="footer"></p>
+<div th:include="email/tr/email-footer :: footer"></div>
 </body>
 </html>

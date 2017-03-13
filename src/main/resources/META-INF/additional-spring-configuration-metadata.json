@@ -38,7 +38,12 @@
     {
       "name": "application.reset-password-token-lifetime",
       "type": "java.lang.Long",
-      "description": "Access token lifetime in milliseconds"
+      "description": "Access token lifetime in milliseconds."
+    },
+    {
+      "name": "application.name",
+      "type": "java.lang.String",
+      "description": "Name of the application."
     }
   ]
 }

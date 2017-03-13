@@ -2,7 +2,8 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head></head>
 <body>
-<p>Merhaba <span th:text="${realName}"></span>, hesabın artık aktif!</p>
-<p th:text="footer"></p>
+<p>Merhaba <span th:text="${realName}"></span>,</p>
+<p>Hesabını başarıyla aktifleştirdin.</p>
+<div th:include="email/tr/email-footer :: footer"></div>
 </body>
 </html>

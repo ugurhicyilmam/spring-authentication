@@ -205,7 +205,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private boolean verifyAccessToken(String token) {
-        return accessTokens.containsKey(token) && accessTokens.get(token).getValidUntilInEpoch() > System.currentTimeMillis();
+        return token != null && accessTokens.containsKey(token) && accessTokens.get(token).getValidUntilInEpoch() > System.currentTimeMillis();
     }
 
     @Override

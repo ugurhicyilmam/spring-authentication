@@ -62,6 +62,8 @@ public class AuthServiceImplTest {
     private long recoveryTokenLifeTime;
 
     private String generatedToken = "TOKEN_UTILS_GENERATED_TOKEN";
+    private String base64GeneratedToken = "TOKEN_UTILS_BASE64_TOKEN";
+    private String decodedGeneratedToken = generatedToken;
 
     private AuthService authService;
 
@@ -86,6 +88,8 @@ public class AuthServiceImplTest {
 
         PowerMockito.mockStatic(TokenUtils.class);
         Mockito.when(TokenUtils.generateToken()).thenReturn(generatedToken);
+        Mockito.when(TokenUtils.encodeBase64(eq(generatedToken))).thenReturn(base64GeneratedToken);
+        Mockito.when(TokenUtils.decodeBase64(eq(base64GeneratedToken))).thenReturn(decodedGeneratedToken);
 
     }
 
@@ -311,8 +315,8 @@ public class AuthServiceImplTest {
 
         LoginTransfer loginTransfer = authService.login(request);
 
-        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getAccessToken());
-        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getRefreshToken());
+        assertEquals(generatedToken, TokenUtils.decodeBase64(loginTransfer.getTokenTransfer().getAccessToken()));
+        assertEquals(generatedToken, TokenUtils.decodeBase64(loginTransfer.getTokenTransfer().getRefreshToken()));
 
         ArgumentCaptor<RefreshToken> refreshTokenArgumentCaptor = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository, times(1)).save(refreshTokenArgumentCaptor.capture());
@@ -523,8 +527,8 @@ public class AuthServiceImplTest {
 
         LoginTransfer loginTransfer = authService.refresh(token);
 
-        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getAccessToken());
-        assertEquals(generatedToken, loginTransfer.getTokenTransfer().getRefreshToken());
+        assertEquals(generatedToken, TokenUtils.decodeBase64(loginTransfer.getTokenTransfer().getAccessToken()));
+        assertEquals(generatedToken, TokenUtils.decodeBase64(loginTransfer.getTokenTransfer().getRefreshToken()));
 
         ArgumentCaptor<RefreshToken> refreshTokenArgumentCaptor = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository, times(1)).save(refreshTokenArgumentCaptor.capture());
@@ -578,7 +582,7 @@ public class AuthServiceImplTest {
 
         LoginTransfer loginTransfer = authService.login(request);
 
-        assertEquals(user, authService.getUserByValidAccessToken(loginTransfer.getTokenTransfer().getAccessToken()));
+        assertEquals(user, authService.getUserByValidAccessToken(TokenUtils.decodeBase64(loginTransfer.getTokenTransfer().getAccessToken())));
     }
 
     @Test

@@ -4,6 +4,7 @@ package com.ugurhicyilmam.config;
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.exceptions.AccessTokenInvalidException;
+import com.ugurhicyilmam.util.TokenUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.GenericFilterBean;
@@ -26,7 +27,8 @@ public class AccessFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        String accessToken = ((HttpServletRequest) servletRequest).getHeader(accessTokenHeaderName);
+        String accessTokenBase64 = ((HttpServletRequest) servletRequest).getHeader(accessTokenHeaderName);
+        String accessToken = TokenUtils.decodeBase64(accessTokenBase64);
         UsernamePasswordAuthenticationToken authentication = createAuthByAccessToken(accessToken);
 
         if (authentication != null) {

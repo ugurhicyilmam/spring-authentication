@@ -3,16 +3,22 @@ package com.ugurhicyilmam.response;
 import lombok.Data;
 
 @Data
-public class Response {
+public class Response<T> {
     private ResponseCode code;
-    private Object data = null;
+    private T data;
 
     public Response(ResponseCode code) {
         this.code = code;
+        this.data = null;
     }
 
-    public Response(ResponseCode code, Object data) {
+    public Response(ResponseCode code, T data) {
         this.code = code;
         this.data = data;
+    }
+
+    public Response() {
+        this.code = ResponseCode.SUCCESS;
+        this.data = null;
     }
 }

@@ -8,6 +8,8 @@ import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.response.Response;
 import com.ugurhicyilmam.service.AuthService;
 import com.ugurhicyilmam.service.UserService;
+import com.ugurhicyilmam.service.transfer.LoginTransfer;
+import com.ugurhicyilmam.service.transfer.TokenTransfer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +34,9 @@ public class AuthController {
     }
 
     @RequestMapping(method = POST, value = "/register")
-    public Response register(@RequestBody @Valid RegisterRequest request) {
+    public Response<LoginTransfer> register(@RequestBody @Valid RegisterRequest request) {
         User user = authService.register(request);
-        return new Response(SUCCESS, authService.login(user));
+        return new Response<>(SUCCESS, authService.login(user));
     }
 
     @RequestMapping(method = GET, value = "/activate")
@@ -44,8 +46,8 @@ public class AuthController {
     }
 
     @RequestMapping(method = POST, value = "/login")
-    public Response login(@RequestBody LoginRequest request) {
-        return new Response(SUCCESS, authService.login(request));
+    public Response<LoginTransfer> login(@RequestBody LoginRequest request) {
+        return new Response<>(SUCCESS, authService.login(request));
     }
 
     @RequestMapping(method = GET, value = "/recover")
@@ -55,14 +57,14 @@ public class AuthController {
     }
 
     @RequestMapping(method = POST, value = "/reset")
-    public Response reset(@RequestParam String recoveryToken, @RequestBody @Valid ResetRequest request) {
+    public Response<LoginTransfer> reset(@RequestParam String recoveryToken, @RequestBody @Valid ResetRequest request) {
         User user = authService.reset(recoveryToken, request.getPassword());
-        return new Response(SUCCESS, authService.login(user));
+        return new Response<>(SUCCESS, authService.login(user));
     }
 
     @RequestMapping(method = GET, value = "/refresh")
-    public Response refresh(@RequestHeader("Refresh-Token") String refreshToken) {
-        return new Response(SUCCESS, authService.refresh(refreshToken));
+    public Response<LoginTransfer> refresh(@RequestHeader("Refresh-Token") String refreshToken) {
+        return new Response<>(SUCCESS, authService.refresh(refreshToken));
     }
 
     @RequestMapping(method = GET, value = "/logout")

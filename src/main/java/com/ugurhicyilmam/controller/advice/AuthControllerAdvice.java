@@ -25,7 +25,7 @@ public class AuthControllerAdvice {
         for (FieldError fieldError : fieldErrors) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        return new Response(ERR_VALIDATION, errors);
+        return new Response<>(ERR_VALIDATION, errors);
     }
 
     @ExceptionHandler(InvalidActivationTokenException.class)

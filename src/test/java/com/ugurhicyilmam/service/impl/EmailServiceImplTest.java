@@ -49,7 +49,7 @@ public class EmailServiceImplTest {
 
         assertReceivedMessage(wiser).from("auth@localhost.com")
                 .to(user.getEmail())
-                .withSubject("Aktivasyon Detayları");
+                .withSubject("Hesap Aktivasyonu - Uninet");
     }
 
 }

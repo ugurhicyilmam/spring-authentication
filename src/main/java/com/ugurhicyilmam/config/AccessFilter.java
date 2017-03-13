@@ -3,7 +3,7 @@ package com.ugurhicyilmam.config;
 
 import com.ugurhicyilmam.model.User;
 import com.ugurhicyilmam.service.AuthService;
-import com.ugurhicyilmam.service.exceptions.AccessTokenInvalidException;
+import com.ugurhicyilmam.service.exceptions.InvalidAccessTokenException;
 import com.ugurhicyilmam.util.TokenUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,7 +44,7 @@ public class AccessFilter extends GenericFilterBean {
         try {
             User user = authService.getUserByValidAccessToken(accessToken);
             authenticationToken = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
-        } catch (AccessTokenInvalidException ex) {
+        } catch (InvalidAccessTokenException ex) {
             // ignore exception
         }
 

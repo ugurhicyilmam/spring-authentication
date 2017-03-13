@@ -153,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
     public User reset(String token, String password) {
         RecoveryToken recoveryToken = recoveryTokenRepository.findByToken(token);
         if (recoveryToken == null || recoveryToken.getValidUntilInEpoch() < System.currentTimeMillis()) {
-            throw new RecoveryTokenInvalidException();
+            throw new InvalidRecoveryTokenException();
         }
         User user = recoveryToken.getUser();
         user.setPassword(passwordEncoder.encode(password));
@@ -173,7 +173,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginTransfer refresh(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token);
         if (refreshToken == null)
-            throw new RefreshTokenInvalidException();
+            throw new InvalidRefreshTokenException();
         User user = refreshToken.getUser();
         refreshTokenRepository.deleteByToken(token);
         return getLoginTransferForUser(user);
@@ -199,7 +199,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public User getUserByValidAccessToken(String accessToken) {
         if (!verifyAccessToken(accessToken) || accessTokens.get(accessToken).getUser() == null) {
-            throw new AccessTokenInvalidException();
+            throw new InvalidAccessTokenException();
         }
         return accessTokens.get(accessToken).getUser();
     }

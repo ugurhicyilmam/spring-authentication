@@ -489,7 +489,7 @@ public class AuthServiceImplTest {
 
         try {
             authService.reset(token, "password");
-        } catch (RecoveryTokenInvalidException ex) {
+        } catch (InvalidRecoveryTokenException ex) {
             // passed
             return;
         }
@@ -507,7 +507,7 @@ public class AuthServiceImplTest {
 
         try {
             authService.reset(token, "password");
-        } catch (RecoveryTokenInvalidException ex) {
+        } catch (InvalidRecoveryTokenException ex) {
             // passed
             return;
         }
@@ -564,7 +564,7 @@ public class AuthServiceImplTest {
 
         try {
             authService.refresh(token);
-        } catch (RefreshTokenInvalidException ex) {
+        } catch (InvalidRefreshTokenException ex) {
             return;
         }
         fail();
@@ -591,7 +591,7 @@ public class AuthServiceImplTest {
 
         try {
             authService.getUserByValidAccessToken(accessToken);
-        } catch (AccessTokenInvalidException ex) {
+        } catch (InvalidAccessTokenException ex) {
             return;
         }
         fail();
@@ -617,7 +617,7 @@ public class AuthServiceImplTest {
 
         try {
             authService.getUserByValidAccessToken(generatedToken);
-        } catch (AccessTokenInvalidException ex) {
+        } catch (InvalidAccessTokenException ex) {
             return;
         }
         fail();

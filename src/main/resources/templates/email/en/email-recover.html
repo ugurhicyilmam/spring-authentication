@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head></head>
+<body>
+<p>Hello <span th:text="${realName}"></span>,</p>
+<p>Visit below address to reset your password.</p>
+<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${recoveryToken})}">Reset Password</a>
+<p>Bu link 2 gün boyunca aktif olacak.</p>
+<p>Eğer bu e-postanın seninle ilgili olmadığını düşünüyorsan görmezden gelebilirsin.</p>
+<div th:include="email/en/email-footer :: footer"></div>
+</body>
+</html>

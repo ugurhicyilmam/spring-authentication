@@ -1,0 +1,49 @@
+{
+  "properties": [
+    {
+      "name": "application.validate-email-domain",
+      "type": "java.lang.Boolean",
+      "description": "Set it to true to allow only certain email domains accepted during registration."
+    },
+    {
+      "name": "application.log-service-layer-as-info",
+      "type": "java.lang.Boolean",
+      "description": "Service layer logged as debug if false, info otherwise."
+    },
+    {
+      "name": "application.mail.host",
+      "type": "java.lang.String",
+      "description": "Mail service host."
+    },
+    {
+      "name": "application.email.base-url",
+      "type": "java.lang.String",
+      "description": "Server url to be included to links in emails."
+    },
+    {
+      "name": "application.email.from",
+      "type": "java.lang.String",
+      "description": "From field of sent emails."
+    },
+    {
+      "name": "application.activation-token-lifetime",
+      "type": "java.lang.Long",
+      "description": "Activation token lifetime in milliseconds."
+    },
+    {
+      "name": "application.access-token-lifetime",
+      "type": "java.lang.Long",
+      "description": "Access token lifetime in milliseconds."
+    },
+    {
+      "name": "application.reset-password-token-lifetime",
+      "type": "java.lang.Long",
+      "description": "Access token lifetime in milliseconds."
+    },
+    {
+      "name": "application.name",
+      "type": "java.lang.String",
+      "description": "Name of the application."
+    }
+  ]
+}

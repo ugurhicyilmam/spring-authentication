@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head></head>
+<body>
+<p>Selam <span th:text="${realName}"></span>,</p>
+<p>Aşağıdaki linke tıklayarak hesabını aktifleştirebilirsin:</p>
+<a th:href="@{${serverUrl} +'/api/auth/activate'(token=${activationToken})}">Aktifleştir</a>
+<p>Bu link 2 gün boyunca aktif olacak.</p>
+<p>Eğer bu e-postanın seninle ilgili olmadığını düşünüyorsan görmezden gelebilirsin.</p>
+<div th:include="email/tr/email-footer :: footer"></div>
+</body>
+</html>

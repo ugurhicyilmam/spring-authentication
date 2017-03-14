@@ -1,10 +1,19 @@
 # spring-boot-auth
-Boilerplate for rest service of authentication with email service using Spring Boot
+Full token-based authentication implementation using Spring Boot.
 
-Features:
+Endpoints added for:
 - Registration
 - Login 
 - Forgot Password
 - Reset Password
-- Account activation
-- Externalized settings
+- Change Password
+- Account Activation
+- Refresh Token
+
+Additional Features:
+- i18n support for emails sent.
+- Access token filter
+
+Todo:
+- Add acceptance tests
+- Add Rest API documentation

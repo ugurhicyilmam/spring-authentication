@@ -1,10 +1,6 @@
 package com.ugurhicyilmam.controller;
 
-import com.jayway.jsonpath.JsonPath;
 import com.ugurhicyilmam.controller.request.RegisterRequest;
-import com.ugurhicyilmam.response.Response;
-import com.ugurhicyilmam.service.transfer.LoginTransfer;
-import com.ugurhicyilmam.service.transfer.UserTransfer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,12 +11,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 @SuppressWarnings("unchecked")
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class AuthControllerTest {
 
     @Autowired
@@ -38,7 +34,7 @@ public class AuthControllerTest {
     public void tearDown() throws Exception {
 
     }
-
+    // Acceptance test boilerplate.
     @Test
     public void register_shouldRegisterWhenCorrect() throws Exception {
 
@@ -50,10 +46,14 @@ public class AuthControllerTest {
         request.setPassword("123123");
         request.setPasswordConfirmation("123123");
 
-        String response = restTemplate.postForObject("/api/auth/register", request, String.class);
+        given().contentType("application/json").body(request)
+                .when().post("/api/auth/register")
+                .then().statusCode(200)
+                .body("data.userInformation.firstName", equalTo(request.getFirstName()),
+                        "data.userInformation.lastName", equalTo(request.getLastName()),
+                        "data.userInformation.email", equalTo(request.getEmail()),
+                        "data.userInformation.language", equalTo(request.getLanguage()));
 
-        assertEquals(request.getFirstName(), JsonPath.read(response, "$.data.userInformation.firstName"));
-        assertEquals(request.getLastName(), JsonPath.read(response, "$.data.userInformation.lastName"));
     }
 
     @Test
